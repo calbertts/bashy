@@ -1,0 +1,53 @@
+variable = print "OK"
+
+value = true
+
+// CONDITIONS
+value ?
+  print (
+    read list root > count
+  ) > count
+
+(value or value2) and value3 ?
+  print "OK"
+  read file > something
+: 
+  not value ?
+    print "NO"
+
+  print "NO"
+
+print variable
+
+// FUNCTIONS
+param1, param2 >
+  variable = print "filePath" > read
+  return variable
+
+// PARALLEL EXECUTIONS
+var1, var2 = 
+  | read file1 > filter "OK"
+  | read file2 > count
+
+list (
+  print "OK" 
+    > count
+    > replace "OK" by "KO"
+    > store myFile < (
+        print file
+        > count
+      )
+    > cut by "," < (
+        list (
+          read (
+            print "OK"
+          )
+          > sort < (read file)
+        )
+      )
+)
+> print
+> sort
+> count 
+> replace "IS" by "SI" 
+> store

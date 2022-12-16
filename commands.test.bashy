@@ -1,0 +1,101 @@
+const parser = require('./parser')
+
+const test = `
+myVariable = "data"
+
+/** PRINT **/
+print "OK"
+print file
+print (read file > count) > print
+read file > print
+
+/** LIST **/
+home = "~"
+list "$HOME/myfolder.d"
+otherVar = list home > count
+list home
+list otherVar
+list otherVar > count > print
+list
+print path > list > count
+
+/** READ **/
+home = "~/file.txt"
+
+read home
+read "/etc/file.pdf"
+read home > count
+print path > read > count
+
+/** FILTER **/
+dir = "~"
+file = "~/myFile.pdf"
+myFilter = "%"
+
+list home > filter myFilter
+
+fileContent = read file
+commands = read file
+
+filter "%" < "lite%ral" // input literal
+filter myFilter < commands // input variable
+filter "/" < (print fileContent > count) > print
+
+/** REPLACE BY */
+file = read "~/file"
+root = "/"
+token = "%"
+
+replace "token" by "toquen" < file
+
+replace (
+  print (read list root) > count
+) by (
+  read print root
+) < (
+  read "/etc/file" > count
+)
+
+replace "x" by "z" < read file > count
+replace "x" by "z" < file > count
+
+read file > replace token by "b" 
+
+/** CUT BY **/
+file = read "~/file"
+root = "/"
+variable = 1
+token = "%"
+
+cut by "toquen" < file
+
+cut by (
+  read print root > count
+) < (
+  read "/etc/file" > count
+)
+
+cut by "z" < read file > count
+cut by "z" < file > count
+
+read file > cut by print "OK"
+
+/** COUNT **/
+count < read file
+count
+lines = read file > count
+
+/** STORE **/
+read file > store "file.pdf"
+store "myFileV2.pdf" < read "myfile.pdf"
+read "myFile" > store "file.pdf"
+read file > store "file.pdf"
+store "myFileV2.pdf" < read "myfile.pdf"
+read file > store "file.pdf"
+read file > store "file.pdf" > count
+store "myFileV22.pdf" < read "myfile.pdf" > count
+store "myFileV2.pdf" < (read "myfile.pdf" > count) > print
+`;
+
+parser.parse(test)
+console.log("Commands OK")

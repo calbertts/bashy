@@ -1,0 +1,12 @@
+def x = "abc"
+
+list myDir 
+ | count
+ | filter "B"
+
+def myVar = list home 
+ | filter "A"
+ | count
+ | list usr
+
+def y = "abc"

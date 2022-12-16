@@ -1,0 +1,15 @@
+const parser = require('./parser')
+
+const test = `
+commandAssigVar = print "myVar" > count
+string = "Hey" // string
+one = 1 // number
+stringVar = string // variable
+print one
+print stringVar > count
+commandAssig = print "myVar" // command
+commandAssigVar = print myVar  // command var
+`;
+
+parser.parse(test)
+console.log("Variables OK")

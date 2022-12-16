@@ -1,0 +1,6 @@
+def myVar = "Hey"
+print myVar
+
+list "/Users/calbertts/personal/bashy"
+  | replace "." by "-"
+  | count
