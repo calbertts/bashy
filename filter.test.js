@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('filter', () => {
   test('filter string', () => {
-    const test = `filter "abc" < read file`
+    const test = `filter "abc" < read $file`
     const expectedOutput = [
       {
         type: "Commands",
@@ -30,7 +30,7 @@ describe('filter', () => {
   })
 
   test('filter number', () => {
-    const test = `filter 123 < read file`
+    const test = `filter 123 < read $file`
     const expectedOutput = [
       {
         type: "Commands",
@@ -57,7 +57,7 @@ describe('filter', () => {
   })
 
   test('filter variable', () => {
-    const test = `filter myValue < read file`
+    const test = `filter $myValue < read $file`
 
     const expectedOutput = [
         {
@@ -91,7 +91,7 @@ describe('filter', () => {
   })
 
   test('filter string from stdin', () => {
-    const test = `read file > filter "abc"`
+    const test = `read $file > filter "abc"`
 
      const expectedOutput = [
         {
@@ -123,7 +123,7 @@ describe('filter', () => {
   })
 
   test('filter nested piped commands', () => {
-     const test = `filter (print theToken) < (read file > print)`
+     const test = `filter (print $theToken) < (read $file > print)`
 
      const expectedOutput = [
          {

@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('replace', () => {
   test('replace simple piped command', () => {
-    const test = `replace "old" by "new" < read file`
+    const test = `replace "old" by "new" < read $file`
 
     const expectedOutput = [{
       "type": "Commands",
@@ -32,7 +32,7 @@ describe('replace', () => {
   })
 
   test('replace multiple piped commands', () => {
-    const test = `replace "old" by "new" < read file > print`
+    const test = `replace "old" by "new" < read $file > print`
 
     const expectedOutput = [{
       "type": "Commands",
@@ -96,7 +96,7 @@ describe('replace', () => {
   })
 
   test('replace multiple piped commands', () => {
-    const test = `replace "old" by "new" < read file > print`
+    const test = `replace "old" by "new" < read $file > print`
 
     const expectedOutput = [
       {
@@ -140,7 +140,7 @@ describe('replace', () => {
   })
 
   test('replace nested piped commands', () => {
-    const test = `replace "old" by "new" < (read file) > print`
+    const test = `replace "old" by "new" < (read $file) > print`
     const expectedOutput = [{
       "type": "Commands",
       "commands": [{

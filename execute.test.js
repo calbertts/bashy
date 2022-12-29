@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe("execute", () => {
   test("should parse a simple execute a bashy command", () => {
-    const test = 'execute "print variable"';
+    const test = 'execute "print $variable"';
     const expectedOutput = [{
       "type": "Commands",
       "commands": [
@@ -15,7 +15,7 @@ describe("execute", () => {
             },
             "value": {
                "type": "string",
-               "value": "print variable"
+               "value": "print $variable"
             }
          }
       ]
@@ -26,7 +26,7 @@ describe("execute", () => {
   });
 
   it("should parse an execute a bashy command with a variable value", () => {
-    const test = 'execute `list ${folder}`';
+    const test = 'execute `list ${$folder}`';
     const expectedOutput = [
        {
           "type": "Commands",
@@ -59,7 +59,7 @@ describe("execute", () => {
   it("should parse an execute a bash command with an input redirection", () => {
     const test = 
       `execute -bash < (
-        read file
+        read $file
           > print
           > count
       )`

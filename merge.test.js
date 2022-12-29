@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('merge', () => {
   test('merge simple command', () => {
-    const test = `merge (read file1), (read file2), "string"`
+    const test = `merge (read $file1), (read $file2), "string"`
 
     const expectedOutput = [{
       "type": "Commands",
@@ -44,8 +44,8 @@ describe('merge', () => {
   test('merge muliple line command', () => {
     const test =
       `merge 
-         read file1,
-         read file2,
+         read $file1,
+         read $file2,
          "string"`
 
     const expectedOutput = [{

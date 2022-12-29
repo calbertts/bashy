@@ -21,7 +21,7 @@ describe('read', () => {
 	})
 
 	test('read variable', () => {
-		const test = `read myFile`
+		const test = `read $myFile`
 
 		const expectedOutput = [{
 			"type": "Commands",

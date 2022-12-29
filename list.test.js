@@ -38,7 +38,7 @@ describe('list', () => {
 	})
 
 	test('list path variable', () => {
-		const test = `list myPath`
+		const test = `list $myPath`
 
 		const expectedOutput = [{
 			"type": "Commands",

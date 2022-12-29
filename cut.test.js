@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('cut', () => {
   test('cut string', () => {
-    const test = `cut by "," < read file`
+    const test = `cut by "," < read $file`
 
      const expectedOutput = [
         {
@@ -37,7 +37,7 @@ describe('cut', () => {
   })
 
   test('cut variable', () => {
-    const test = `cut by myValue < read file`
+    const test = `cut by $myValue < read $file`
 
      const expectedOutput = [
         {
@@ -71,7 +71,7 @@ describe('cut', () => {
   })
 
   test('cut single command', () => {
-    const test = `cut by read file < print`
+    const test = `cut by read $file < print`
 
      const expectedOutput = [
         {
@@ -113,7 +113,7 @@ describe('cut', () => {
 
   describe('cut piped commands', () => {
     test('cut simple piped command', () => {
-      const test = `cut by "," < read file`
+      const test = `cut by "," < read $file`
 
       const expectedOutput = [
           {
@@ -148,7 +148,7 @@ describe('cut', () => {
 
     test('cut multiple piped commands', () => {
       const test = 
-        `read file
+        `read $file
            > cut by ","
            > count
            > print`
@@ -195,7 +195,7 @@ describe('cut', () => {
     })
 
     test('print nested piped commands', () => {
-        const test = `print (cut by "," < read file) > count`
+        const test = `print (cut by "," < read $file) > count`
 
         const expectedOutput = [
            {

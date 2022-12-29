@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('count command', () => {
 	test('count simple command', () => {
-		const test = `count < read file`
+		const test = `count < read $file`
 		const expectedOutput = [{
 			"type": "Commands",
 			"commands": [{
@@ -25,7 +25,7 @@ describe('count command', () => {
 	})
 
 	test('count multiple piped commands', () => {
-		const test = `print (read file > filter "abc") > count`
+		const test = `print (read $file > filter "abc") > count`
 		const expectedOutput = [{
 			"type": "Commands",
 			"commands": [{
@@ -63,7 +63,7 @@ describe('count command', () => {
 	})
 
 	test('count nested piped commands', () => {
-		const test = `count < (print (read file > filter "abc"))`
+		const test = `count < (print (read $file > filter "abc"))`
 		const expectedOutput = [{
 			"type": "Commands",
 			"commands": [{

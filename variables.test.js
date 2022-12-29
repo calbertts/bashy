@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe("variables", () => {
   test("assign string value", () => {
-    const test = 'string = "Hello World!"\nprint string'
+    const test = 'string = "Hello World!"\nprint $string'
     const result = parser.parse(test)
     const expected = [
       {
@@ -22,7 +22,7 @@ describe("variables", () => {
   })
 
   test("assign integer value", () => {
-    const test = 'int = 123\nprint int'
+    const test = 'int = 123\nprint $int'
     const result = parser.parse(test)
     const expected = [
       {
@@ -41,7 +41,7 @@ describe("variables", () => {
   })
 
   test("assign decimal value", () => {
-    const test = 'dec = 123.456\nprint dec'
+    const test = 'dec = 123.456\nprint $dec'
     const result = parser.parse(test)
     const expected = [
       {
@@ -76,8 +76,8 @@ describe("variables", () => {
   test("assign command output", () => {
     const test =
       `commandResult = (
-        read file 
-          > print < (read path)
+        read $file 
+          > print < (read $path)
       )`
     const result = parser.parse(test)
     const expected = [

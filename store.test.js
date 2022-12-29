@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('store', () => {
   test('store simple piped command', () => {
-    const test = `store "myfile" < read file`
+    const test = `store "myfile" < read $file`
 
     const expectedOutput = [{
       "type": "Commands",
@@ -31,7 +31,7 @@ describe('store', () => {
   })
 
   test('store multiple piped commands', () => {
-    const test = `store "myfile" < read file > filter "abc" > count`
+    const test = `store "myfile" < read $file > filter "abc" > count`
 
     const expectedOutput = [
       {
@@ -102,7 +102,7 @@ describe('store', () => {
   })
 
   test('store variable filename', () => {
-    const test = `store myFile < read file`
+    const test = `store $myFile < read $file`
 
     const expectedOutput = [{
       "type": "Commands",
@@ -130,7 +130,7 @@ describe('store', () => {
   })
 
 	test('store command filename', () => {
-		const test = `store (print myFile) < read file`
+		const test = `store (print $myFile) < read $file`
 
 		const expectedOutput = [{
 			"type": "Commands",

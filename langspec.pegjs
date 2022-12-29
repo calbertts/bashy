@@ -8,9 +8,10 @@ Sentences =
 Sentence = 
   !."\n"
   / Comment
+  / Function
   / Commands
   / AssigmentVariable
-
+  / Parallel
 
 /******************************* TYPE OF SENTENCES */
 Comment "comment" = 
@@ -56,19 +57,101 @@ MultiLineComment
 /******************************* COMMENTS TYPES END */
 
 
+/******************************* FUNCTIONS */
+Function = 
+  L head:FunctionHead L
+  body:(Indent _ L fl:FunctionLine L EOS? { return fl })*
+  {
+    return {
+      type: "CustomCommand",
+      head,
+      body
+    }
+  }
+
+FunctionHead = 
+  name:FunctionName ":" _ params:FunctionParams? EOS {
+    return {
+      name,
+      params: params || []
+    }
+  }
+
+FunctionParams =
+  head:FunctionParam tail:("," _ fp:FunctionParam { return fp })* {
+    return [head, ...tail]
+  }
+
+FunctionParam = Variable { return text() }
+
+FunctionLine = 
+  Indent "return" _ value:CommandParam {
+  	return {
+      type: "return",
+      value
+    } 
+  }
+  / __ line:Sentence { return line }
+
+FunctionName = Variable { return text() }
+
+FunctionArgs =
+  head:CommandParam tail:("," _ cp:CommandParam { return cp })* {
+    return [head, ...tail]
+  }
+/******************************* FUNCTIONS END */
+
+
+/******************************* CONDITIONALS */
+
+/******************************* CONDITIONALS END */
+
+
+/******************************* PARALLELS */
+Parallel = 
+  L head:ParallelHead L
+  body:(Indent _ ParallelOp _ L fl:CommandParam L EOS? { return fl })*
+  {
+    return {
+      type: "ParallelCommands",
+      ...head,
+      commands: [
+        ...body
+      ]
+    }
+  }
+
+ParallelHead =
+  outputVars:ParallelOutputs __ "=" EOS {
+    return {
+      outputVars: outputVars || []
+    }
+  }
+
+ParallelOutputs =
+  head:ParallelOutputVar tail:("," _ fp:ParallelOutputVar { return fp })* {
+    return [head, ...tail]
+  }
+
+ParallelOutputVar = Variable { return text() }
+  
+Indent = "  "
+ParallelOp = "|"
+
+/******************************* PARALLELS END */
 
 /******************************* COMMANDS AND VARIABLE TYPES */
 VariableValue =
-  command:PipedCommand {
+  decimal:Decimal { return { type: "decimal", value: decimal} }
+  / integer:Integer { return { type: "integer", value: parseInt(integer.join(""))} }
+  / boolean:Boolean { return { type: "boolean", value: boolean} }
+  / backtickString:BacktickString { return { type: "template", value: backtickString } }
+  / string:String { return { type: "string", value: string } }
+  / "$" variable:Variable { return { type: "variable", value: variable.value } }
+  / command:PipedCommand {
     const [head, tail] = command
   	return { type: "command", value: [head, ...tail] }
   }
-  / string:String { return { type: "string", value: string } }
-  / decimal:Decimal { return { type: "decimal", value: decimal} }
-  / integer:Integer { return { type: "integer", value: parseInt(integer.join(""))} }
-  / boolean:Boolean { return { type: "boolean", value: boolean} }
-  / variable:Variable { return { type: "variable", value: variable.value } }
-  / backtickString:BacktickString { return { type: "template", value: backtickString } }
 
 PipedCommand =
   head:SingleCommand 
@@ -89,6 +172,7 @@ SingleCommand  =
   / execCommand:Execute { return execCommand }
   / sortCommand:Sort { return sortCommand }
   / mergeCommand:Merge { return mergeCommand }
+  / genericCommand:Generic { return genericCommand }
 /******************************* COMMANDS TYPES END */
 
 
@@ -103,6 +187,15 @@ CommandInput =
   EOS { return {stdin: true} }
   / __ In _ param:VariableValue { return param }
   / __ In _ "(" __ input:VariableValue __ ")" { return input }
+
+Generic = 
+  command:Variable _ params:FunctionArgs _ input:CommandInput? {
+  	return {
+      command: command.value,
+      type: "custom",
+      params, input: !input ? {stdin: true} : input
+    }
+  }
 
 List =
   command:"list" _ path:CommandParam? {
@@ -148,14 +241,18 @@ Store =
   }
 
 Sort =
-  command:"sort" _ opt:SortOpts _ input:CommandInput? {
-    return { command, opt, input: !input ? {stdin: true} : input }
+  command:"sort" _ opt:SortOpts? _ input:CommandInput? {
+    return {
+      command, 
+      opt: !opt ? { type: "string", value: "asc" } : opt, 
+      input: !input ? {stdin: true} : input
+    }
   }
 
 SortOpts =
-  "des"
-  / "asc"
-  / CommandParam
+  "-des" { return { type: "string", value: "des" } }
+  / "-asc" { return { type: "string", value: "asc" } }
+  / "-"cp:CommandParam { return cp }
 
 Merge =
   command:"merge" _ inputs:MergeInputs {
@@ -356,5 +453,3 @@ _
   
 L = 
 	(LineTerminatorSequence / Comment)*
-
-

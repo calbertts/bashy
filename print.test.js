@@ -47,7 +47,7 @@ describe('print', () => {
   })
 
   test('print variable', () => {
-    const test = `print myValue`
+    const test = `print $myValue`
 
      const expectedOutput = [
        {
@@ -69,7 +69,7 @@ describe('print', () => {
   })
 
   test('print single command', () => {
-    const test = `print read file`
+    const test = `print read $file`
 
      const expectedOutput = [
        {
@@ -100,7 +100,7 @@ describe('print', () => {
 
   describe('print piped commands', () => {
     test('print simple piped command', () => {
-      const test = `print > read file`
+      const test = `print > read $file`
 
        const expectedOutput = [
          {
@@ -130,7 +130,7 @@ describe('print', () => {
     test('print multiple piped commands', () => {
       const test = 
         `print
-           > read file
+           > read $file
            > count
         `
 
@@ -168,7 +168,7 @@ describe('print', () => {
     test('print nested piped commands', () => {
       const test = 
         `print (
-           read file
+           read $file
              > count
              > print
          ) > count`
@@ -281,7 +281,7 @@ describe('print', () => {
 
   describe('print from input', () => {
     test('print single command', () => {
-      const test = `print < read file`
+      const test = `print < read $file`
 
        const expectedOutput = [
          {
