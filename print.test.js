@@ -34,7 +34,7 @@ describe('print', () => {
              {
                 "command": "print",
                 "value": {
-                   "type": "int",
+                   "type": "integer",
                    "value": 123
                 }
              }
@@ -315,7 +315,7 @@ describe('print', () => {
         `print < (
            read (
              print "filename"
-           ) > sort asc
+           ) > sort
          )`
 
        const expectedOutput = [
@@ -344,7 +344,10 @@ describe('print', () => {
                         },
                         {
                            "command": "sort",
-                           "opt": "asc",
+                           "opt": {
+                             "type": "string",
+                             "value": "asc"
+                           },
                            "input": {
                               "stdin": true
                            }

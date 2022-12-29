@@ -37,7 +37,7 @@ describe('filter', () => {
         commands: [
           {
             command: "filter",
-            token: { type: "int", value: 123 },
+            token: { type: "integer", value: 123 },
             input: {
               type: "command",
               value: [

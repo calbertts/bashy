@@ -27,7 +27,15 @@ Commands =
   }
 
 AssigmentVariable = 
-  L variable:Variable _? "=" _? value:VariableValue EOS?
+  L variable:Variable __ "=" __ value:CommandParam EOS?
+  {
+    return {
+      type: "Assignment",
+      variable: variable.value,
+      value
+    }
+  }
+  / L variable:Variable __ "=" __ "(" __ value:CommandParam __ ")" EOS?
   {
     return {
       type: "Assignment",
@@ -56,7 +64,9 @@ VariableValue =
   	return { type: "command", value: [head, ...tail] }
   }
   / string:String { return { type: "string", value: string } }
-  / number:Number { return { type: "int", value: parseInt(number.join(""))} }
+  / decimal:Decimal { return { type: "decimal", value: decimal} }
+  / integer:Integer { return { type: "integer", value: parseInt(integer.join(""))} }
+  / boolean:Boolean { return { type: "boolean", value: boolean} }
   / variable:Variable { return { type: "variable", value: variable.value } }
   / backtickString:BacktickString { return { type: "template", value: backtickString } }
 
@@ -161,9 +171,19 @@ MergeInputs =
 
 
 Execute = 
-  command:"execute" _ value:CommandParam {
-    return { command, value }
+  command:"execute"_ interpreter:ExecuteOpts? _ value:CommandParam? _ input:CommandInput? {
+    return {
+    	command, 
+        interpreter: !interpreter ? { type: "string", value: "bashy" } : interpreter, 
+        value: !value ? input : value
+    }
   }
+  
+ExecuteOpts = 
+  "-bashy" { return { type: "string", value: "bashy" } }
+  / "-bash" { return { type: "string", value: "bash" } }
+  / "-sh" { return { type: "string", value: "sh" } }
+  / "-"cp:CommandParam { return cp }
 /******************************* COMMANDS SYNTAX END */
   
 
@@ -173,7 +193,29 @@ Text = [a-zA-Z0-9_]+
 
 String = StringLiteral
 
-Number = [0-9]+
+Integer = [0-9]+
+
+Decimal
+  = DecimalIntegerLiteral "." DecimalDigit* {
+      return parseFloat(text())
+    }
+  / "." DecimalDigit+ {
+      return parseFloat(text())
+    }
+
+DecimalIntegerLiteral
+  = "0"
+  / NonZeroDigit DecimalDigit*
+
+DecimalDigit
+  = [0-9]
+
+NonZeroDigit
+  = [1-9]
+
+Boolean =
+  "true" { return true }
+  / "false" { return false }
 
 StringLiteral "string"
   = '"' chars:DoubleStringCharacter* '"' {
@@ -270,9 +312,6 @@ UnicodeEscapeSequence
 SourceCharacter
   = .
   
-DecimalDigit
-  = [0-9]
-  
 HexDigit
   = [0-9a-f]i
   
@@ -317,3 +356,5 @@ _
   
 L = 
 	(LineTerminatorSequence / Comment)*
+
+

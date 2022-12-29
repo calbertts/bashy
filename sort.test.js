@@ -3,7 +3,7 @@ const parser = require('./parser')
 
 describe('sort', () => {
   test('sort command with options', () => {
-    const test = `sort asc < read file`
+    const test = `sort -des < read file`
 
     const expectedOutput = [
        {
@@ -11,7 +11,10 @@ describe('sort', () => {
           "commands": [
              {
                 "command": "sort",
-                "opt": "asc",
+                "opt": {
+                  "type": "string",
+                  "value": "des"
+                },
                 "input": {
                    "type": "command",
                    "value": [
@@ -34,7 +37,7 @@ describe('sort', () => {
   })
 
   test('sort command with input', () => {
-    const test = `print lines > sort des`
+    const test = `print lines > sort`
 
     const expectedOutput = [{
       "type": "Commands",
@@ -46,7 +49,10 @@ describe('sort', () => {
         }
       }, {
         "command": "sort",
-        "opt": "des",
+        "opt": {
+          "type": "string",
+          "value": "asc"
+        },
         "input": {
           "stdin": true
         }
@@ -58,7 +64,7 @@ describe('sort', () => {
   })
 
   test('sort param as variable', () => {
-    const test = `print lines > sort (print "asc")`
+    const test = `print lines > sort -(print "asc")`
 
     const expectedOutput = [
        {

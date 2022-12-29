@@ -50,7 +50,7 @@ describe('read', () => {
 					"value": [{
 						"command": "print",
 						"value": {
-							"type": "int",
+							"type": "integer",
 							"value": 123
 						}
 					}]
@@ -76,7 +76,7 @@ describe('read', () => {
 				}, {
 					"command": "print",
 					"value": {
-						"type": "int",
+						"type": "integer",
 						"value": 123
 					}
 				}]
@@ -105,7 +105,7 @@ describe('read', () => {
                {
                   "command": "filter",
                   "token": {
-                     "type": "int",
+                     "type": "integer",
                      "value": 123
                   },
                   "input": {
@@ -146,7 +146,7 @@ describe('read', () => {
                         {
                            "command": "filter",
                            "token": {
-                              "type": "int",
+                              "type": "integer",
                               "value": 123
                            },
                            "input": {
