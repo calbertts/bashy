@@ -18,12 +18,12 @@ value ?
   print "NO"
 
 // FUNCTIONS
-fn: param1, param2 >
+fn: param1, param2
   variable = print "filePath" > read
   return variable
 
 // PARALLEL EXECUTIONS
-var1, var2 = 
+var1, var2 =
   | read file1 
       > filter "OK"
   | read file2 > count

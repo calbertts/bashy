@@ -59,8 +59,8 @@ MultiLineComment
 
 /******************************* FUNCTIONS */
 Function = 
-  L head:FunctionHead L
-  body:(Indent _ L fl:FunctionLine L EOS? { return fl })*
+  head:FunctionHead
+  body:FunctionBody
   {
     return {
       type: "CustomCommand",
@@ -70,7 +70,7 @@ Function =
   }
 
 FunctionHead = 
-  name:FunctionName ":" _ params:FunctionParams? EOS {
+  L name:FunctionName ":" _ params:FunctionParams? EOS L {
     return {
       name,
       params: params || []
@@ -83,17 +83,10 @@ FunctionParams =
   }
 
 FunctionParam = Variable { return text() }
-
-FunctionLine = 
-  Indent "return" _ value:CommandParam {
-  	return {
-      type: "return",
-      value
-    } 
-  }
-  / __ line:Sentence { return line }
-
+  
 FunctionName = Variable { return text() }
+
+FunctionBody = (Indent _ L fl:Sentence L EOS? { return fl })*
 
 FunctionArgs =
   head:CommandParam tail:("," _ cp:CommandParam { return cp })* {
@@ -453,3 +446,26 @@ _
   
 L = 
 	(LineTerminatorSequence / Comment)*
+
+Expression
+  = head:Term tail:(_ ("+" / "-") _ Term)* {
+      return tail.reduce(function(result, element) {
+        if (element[1] === "+") { return result + element[3]; }
+        if (element[1] === "-") { return result - element[3]; }
+      }, head);
+    }
+
+Term
+  = head:Factor tail:(_ ("*" / "/") _ Factor)* {
+      return tail.reduce(function(result, element) {
+        if (element[1] === "*") { return result * element[3]; }
+        if (element[1] === "/") { return result / element[3]; }
+      }, head);
+    }
+
+Factor
+  = "(" _ expr:Expression _ ")" { return expr; }
+  / Integer
+
+
+
