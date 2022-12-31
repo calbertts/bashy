@@ -1,0 +1,15 @@
+var = #1+3
+print "hey"
+print `Hello: $var, an expression: ${ # $one + $two }, ${ print "command"}`
+
+print $value > count
+
+myFunction: param1, param2
+  variable = true
+  v = # 1 + $variable - count < print "OK"
+  filter $file < (
+    print "OK" > list
+  )
+  print $variable
+
+var = myFunction print "ab", "cd" > print

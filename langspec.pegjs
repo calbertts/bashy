@@ -12,6 +12,7 @@ Sentence =
   / Commands
   / AssigmentVariable
   / Parallel
+  / MathExpression
 
 /******************************* TYPE OF SENTENCES */
 Comment "comment" = 
@@ -140,11 +141,14 @@ VariableValue =
   / boolean:Boolean { return { type: "boolean", value: boolean} }
   / backtickString:BacktickString { return { type: "template", value: backtickString } }
   / string:String { return { type: "string", value: string } }
-  / "$" variable:Variable { return { type: "variable", value: variable.value } }
+  / variable:VariableSymbol { return { type: "variable", value: variable } }
+  / mathExpr:MathExpression { return { type: "mathExpr", value: mathExpr } }
   / command:PipedCommand {
     const [head, tail] = command
   	return { type: "command", value: [head, ...tail] }
   }
+
+VariableSymbol = "$" variable:Variable { return variable.value }
 
 PipedCommand =
   head:SingleCommand 
@@ -173,6 +177,7 @@ SingleCommand  =
 /******************************* COMMANDS SYNTAX */
 CommandParam =
   EOS {return null}
+  // mathExpr:MathExpression { return mathExpr }
   / param:VariableValue { return param }
   / "(" __ param:VariableValue __ ")" { return param }
 
@@ -293,6 +298,10 @@ Decimal
       return parseFloat(text())
     }
 
+Number =
+  Integer
+  / Decimal
+
 DecimalIntegerLiteral
   = "0"
   / NonZeroDigit DecimalDigit*
@@ -326,7 +335,8 @@ BacktickStringContent =
   / characters:[^\\`$]+ { return characters.join("") }
 
 InterpolationExpression =
-  "${" variable:VariableValue "}" { return variable }
+  "${" __ variable:VariableValue __ "}" { return variable }
+  / variable:VariableSymbol { return {type: "variable", value: variable} }
   
 EscapedBacktick = 
   "\\`" { return "`" }
@@ -443,29 +453,31 @@ __
   = (WhiteSpace / LineTerminatorSequence / Comment)*
 _
   = (WhiteSpace / MultiLineCommentNoLineTerminator)*
-  
+
 L = 
 	(LineTerminatorSequence / Comment)*
 
-Expression
-  = head:Term tail:(_ ("+" / "-") _ Term)* {
-      return tail.reduce(function(result, element) {
-        if (element[1] === "+") { return result + element[3]; }
-        if (element[1] === "-") { return result - element[3]; }
-      }, head);
+MathExpression =
+  "#" _ head:Term tail:(_ op:("+" / "-") _ term:Term {return {op, term}})* EOS? {
+      return {
+        type: "mathExpression",
+        value: [head, ...tail]
+      }
     }
 
-Term
-  = head:Factor tail:(_ ("*" / "/") _ Factor)* {
-      return tail.reduce(function(result, element) {
-        if (element[1] === "*") { return result * element[3]; }
-        if (element[1] === "/") { return result / element[3]; }
-      }, head);
+Term = 
+  head:Factor tail:(_ op:("*" / "/") _ factor:Factor {return {op, factor}})* {
+      return {
+        type: "mathTerm",
+        value: [head, ...tail]
+      }
     }
 
-Factor
-  = "(" _ expr:Expression _ ")" { return expr; }
-  / Integer
-
-
-
+Factor = 
+  "(" _ expr:MathExpression _ ")" { return expr; }
+  / number:Number { return {type: "number", value: number} }
+  / command:PipedCommand { return {type: "command", command} }
+  / __ "(" __ command:PipedCommand __ ")" { return {type: "command", command} }
+  / variable:VariableSymbol { return {type: "variable", value: variable} }
+  
+  
