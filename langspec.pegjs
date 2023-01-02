@@ -104,7 +104,7 @@ FunctionArgs =
 /******************************* PARALLELS */
 Parallel = 
   L head:ParallelHead L
-  body:(Indent _ ParallelOp _ L fl:CommandParam L EOS? { return fl })*
+  L body:ParallelBody L
   {
     return {
       type: "ParallelCommands",
@@ -114,6 +114,10 @@ Parallel =
       ]
     }
   }
+
+ParallelBody =
+  (Indent _ ParallelOp _ L fl:CommandParam L EOS? { return fl })*
+  / (Indent _ ParallelOp ">" _ L fl:CommandParam L EOS? { return fl })*
 
 ParallelHead =
   outputVars:ParallelOutputs __ "=" EOS {
