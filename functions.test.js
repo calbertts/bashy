@@ -11,7 +11,7 @@ describe('functions', () => {
      )
      print $variable
 
-var = myFunction print "ab", "cd" > print`
+var = myFunction print "ab" "cd" > print`
 
     const expectedOutput = [
        {

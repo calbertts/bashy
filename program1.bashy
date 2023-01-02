@@ -2,6 +2,20 @@ variable = print "OK"
 
 value = true
 
+// LISTS
+lista = [
+  "value",
+  2.5,
+  4,
+  true
+  print "OK",
+  # 5+6
+  $variable
+]
+
+// LOOPS
+
+
 // CONDITIONS
 value ?
   print (
@@ -20,7 +34,6 @@ value ?
 // FUNCTIONS
 fn: param1, param2
   variable = print "filePath" > read
-  return variable
 
 // PARALLEL EXECUTIONS
 var1, var2 =

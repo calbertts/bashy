@@ -9,14 +9,14 @@ describe('parallel', () => {
         | false
         | "hello"
         | 1.2
-        | customCommand $param1, $param2
+        | customCommand $param1 $param2
 
 out1, out2 = 
         | read $file1
         | print "OK" > count < (
             read $file
           )
-        | aaa "OK", "YES"`
+        | aaa "OK" "YES"`
 
     const expectedOutput = [
        {

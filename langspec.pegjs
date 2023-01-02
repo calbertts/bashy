@@ -90,7 +90,7 @@ FunctionName = Variable { return text() }
 FunctionBody = (Indent _ L fl:Sentence L EOS? { return fl })*
 
 FunctionArgs =
-  head:CommandParam tail:("," _ cp:CommandParam { return cp })* {
+  head:CommandParam tail:(" " _ cp:CommandParam { return cp })* {
     return [head, ...tail]
   }
 /******************************* FUNCTIONS END */
@@ -142,7 +142,8 @@ VariableValue =
   / backtickString:BacktickString { return { type: "template", value: backtickString } }
   / string:String { return { type: "string", value: string } }
   / variable:VariableSymbol { return { type: "variable", value: variable } }
-  / mathExpr:MathExpression { return { type: "mathExpr", value: mathExpr } }
+  / mathExpr:MathExpression
+  / list:List
   / command:PipedCommand {
     const [head, tail] = command
   	return { type: "command", value: [head, ...tail] }
@@ -159,7 +160,7 @@ PipedCommand =
 
 SingleCommand  = 
   printCommand:Print { return printCommand }
-  / listCommand:List { return listCommand }
+  / listCommand:ListCmd { return listCommand }
   / readCommand:Read { return readCommand }
   / filterCommand:Filter { return filterCommand }
   / replaceCommand:Replace { return replaceCommand }
@@ -177,7 +178,6 @@ SingleCommand  =
 /******************************* COMMANDS SYNTAX */
 CommandParam =
   EOS {return null}
-  // mathExpr:MathExpression { return mathExpr }
   / param:VariableValue { return param }
   / "(" __ param:VariableValue __ ")" { return param }
 
@@ -195,7 +195,7 @@ Generic =
     }
   }
 
-List =
+ListCmd =
   command:"list" _ path:CommandParam? {
   	return { command, path: !path ? {stdin: true} : path }
   }
@@ -266,7 +266,7 @@ MergeInputs =
 
 
 Execute = 
-  command:"execute"_ interpreter:ExecuteOpts? _ value:CommandParam? _ input:CommandInput? {
+  command:"execute" _ interpreter:ExecuteOpts? _ value:CommandParam? _ input:CommandInput? {
     return {
     	command, 
         interpreter: !interpreter ? { type: "string", value: "bashy" } : interpreter, 
@@ -457,6 +457,8 @@ _
 L = 
 	(LineTerminatorSequence / Comment)*
 
+
+/******************************* MATH EXPR */
 MathExpression =
   "#" _ head:Term tail:(_ op:("+" / "-") _ term:Term {return {op, term}})* EOS? {
       return {
@@ -479,5 +481,22 @@ Factor =
   / command:PipedCommand { return {type: "command", command} }
   / __ "(" __ command:PipedCommand __ ")" { return {type: "command", command} }
   / variable:VariableSymbol { return {type: "variable", value: variable} }
+/******************************* MATH EXPR END */
+
+
+/******************************* LISTS */
+List =
+  __ "[" __ head:ListItem tail:("," __ item:ListItem {return item})* ","? __ "]" {
+    return {
+      type: "List",
+      value: [head, ...tail]
+    }
+  }
   
+ListItem =
+  CommandParam
+  / CommandInput
+/******************************* LISTS END */
+
+
   
