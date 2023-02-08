@@ -215,13 +215,15 @@ VariableSymbol = "$" variable:Variable { return variable.value }
 
 PipedCommand =
   head:SingleCommand 
-  tail:(LineTerminatorSequence? __ Pipe _? item:SingleCommand { return item })*
+  //tail:(LineTerminatorSequence? __ Pipe " " item:SingleCommand { return item })*
+  tail:(_ Pipe " " item:SingleCommand { return item })*
   {
     return [ head, tail ]
   }
 
 SingleCommand  = 
-  genericCommand:Generic { return genericCommand }
+  executeCommand:Execute { return executeCommand }
+  / genericCommand:Generic { return genericCommand }
 /******************************* COMMANDS TYPES END */
 
 
@@ -241,9 +243,18 @@ FunctionArgsX =
   }
   
 CommandEnd = EOS
-Flag = "-"Variable { return text() }
+
+FlagName = t:[a-zA-Z_-]+ { return {value: t.join("")} }
+
+Flag = 
+  "-"flag:Variable { return {flag, value: true} }
+  / "--"flag:FlagName "="? value:VariableValue? { return {flag, value} }
+
 Flags = flags:(flag:Flag _? {return flag})* {
-  return flags
+  return flags.reduce((obj, flag) => {
+    obj[flag.flag.value] = flag.value ? flag.value : !flag.value;
+    return obj;
+  }, {});
 }
 
 Generic = 
@@ -264,41 +275,8 @@ Generic =
     }
   }
 
-BoolValue =
-  boolean:"true" { return { type: "boolean", value: boolean} }
-  / boolean:"false" { return { type: "boolean", value: boolean} }
-  
 Return = command:"return" _ value:CommandParam? {
   	return { command, value: !value ? {stdin: true} : value }
-  }
-
-Replace = 
-  command:"replace" _ pattern:CommandParam _ "by" _ replace:CommandParam _ input:CommandInput? {
-    return { command, pattern, replace, input: !input ? {stdin: true} : input }
-  }
-
-Cut = 
-  command:"cut" _ "by" _ value:CommandParam _ input:CommandInput? {
-  	return { command, value, input: !input ? {stdin: true} : input }
-  }
-
-Sort =
-  command:"sort" _ opt:SortOpts? _ input:CommandInput? {
-    return {
-      command, 
-      opt: !opt ? { type: "string", value: "asc" } : opt, 
-      input: !input ? {stdin: true} : input
-    }
-  }
-
-SortOpts =
-  "-des" { return { type: "string", value: "des" } }
-  / "-asc" { return { type: "string", value: "asc" } }
-  / "-"cp:CommandParam { return cp }
-
-Merge =
-  command:"merge" _ inputs:MergeInputs {
-    return { command, inputs }
   }
 
 MergeInputs =
@@ -321,7 +299,7 @@ ExecuteOpts =
   "-bashy" { return { type: "string", value: "bashy" } }
   / "-bash" { return { type: "string", value: "bash" } }
   / "-sh" { return { type: "string", value: "sh" } }
-  / "-"cp:CommandParam { return cp }
+  / "-"cp:Variable { return cp }
 /******************************* COMMANDS SYNTAX END */
   
 

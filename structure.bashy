@@ -1,4 +1,11 @@
-hello -up -lw "param1" 2 3 4 < $input
+execute -node 'console.log("hola")'
+
+fn:
+  hello -oh --up-so="OK" -cl -lw "param1" 2 3 4 < (
+    print -o $input
+    )
+    > count
+    > sort -asc
 
 $simple = 'Simple Comma'
 $double = "Double Comma"
