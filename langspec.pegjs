@@ -64,13 +64,14 @@ Function =
   }
 
 FunctionHead = 
-  L name:FunctionName ":" _ params:FunctionParams? EOS L {
+  L name:FunctionName ":" _ params:FunctionParams? _ "-"? _ flags:Map? EOS L {
     if (params && (new Set(params)).size !== params.length) {
       error("There's a duplicated param name here: "+ JSON.stringify(params))
     }
     return {
       name,
-      params: params || []
+      params: params || [],
+      flags: flags || {}
     }
   }
 
@@ -240,19 +241,25 @@ FunctionArgsX =
   }
   
 CommandEnd = EOS
+Flag = "-"Variable { return text() }
+Flags = flags:(flag:Flag _? {return flag})* {
+  return flags
+}
 
 Generic = 
-  command:Variable CommandEnd {
+  command:Variable _? flags:Flags? CommandEnd {
     return {
       command: command.value,
       params: null,
+      flags,
       input: {stdin: true}
     }
   }
-  / command:Variable _ params:FunctionArgsX? _ input:CommandInput? CommandEnd {
+  / command:Variable _? flags:Flags? _ params:FunctionArgsX? _ input:CommandInput? CommandEnd {
   	return {
       command: command.value,
       params,
+      flags,
       input: input ? input : {stdin: true}
     }
   }

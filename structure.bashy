@@ -1,3 +1,5 @@
+hello -up -lw "param1" 2 3 4 < $input
+
 $simple = 'Simple Comma'
 $double = "Double Comma"
 $result = 1.456
@@ -21,7 +23,7 @@ $obj = {
   command: (
     print "comamnd result"
   )
-  [`tell me $why`]: true,
+  [`tell me $why`]: true
   [(
     print "TheKey"
   )]: "wow"
@@ -36,7 +38,7 @@ $commandResult = (
   > count
 )
 
-hello: name
+hello: name - {upperCase: "-up"}
   print $name
 
   $template = `Hello: $var, an expression: ${(
@@ -47,7 +49,7 @@ hello: name
 increment: param1, param2
   print (
     print $ONE
-    > count
+    > count -rw
     > verify
   ) $otherParam
   hello "myname" "other"
