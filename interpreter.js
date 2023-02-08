@@ -1,29 +1,56 @@
 const fs = require('fs');
 const parser = require('./parser')
 
-function interpret(ast) {
+function interpret(ast, scope) {
+  if (!ast) {
+    return
+  }
+
   switch (ast.type) {
     case 'Commands':
-      return interpretPipedCommand(ast.commands);
+      return interpretPipedCommand(ast.commands, scope);
     case 'Assignment':
-      return interpretAssignment(ast);
-    // Add case statements for other types of sentences here
+      interpretAssignment(ast, scope);
+      break;
+    case 'CustomCommand':
+      interpretFunctionDeclaration(ast, scope);
+      break;
   }
 }
 
-function interpretPipedCommand(commands) {
+function interpretPipedCommand(commands, scope) {
   let result = null;
-  commands.forEach(_command => {
-    const { command, ...input } = _command;
-    result = interpretSingleCommand(command, input, result);
-  });
+  for (const _command of commands) {
+    const { command, type, ...input } = _command;
+    result = interpretSingleCommand(command, type, input, result, scope);
+  }
   return result;
 }
 
-function interpretSingleCommand(command, input, stdin) {
+function interpretSingleCommand(command, type, input, stdin, scope) {
+  if (type === "custom") {
+    const paramsValues = input.params.map(param => {
+      return interpretValue(param, scope);
+    });
+
+    Object.keys(global[command].params).forEach((key, index) => {
+      global[command].params[key] = paramsValues[index];
+    });
+
+    global[command].params["__stdin"] = stdin;
+
+    const fn = global[command].fn;
+    const fnResult = fn(global[command].params);
+    console.log('FN RESULT:', fnResult);
+    return fnResult;
+  }
+
   switch (command) {
     case 'print':
-      return interpretPrint(command, input, stdin);
+      interpretPrint(command, input, stdin, scope);
+      break;
+    case 'return':
+      return interpretReturn(command, input, stdin, scope);
     case 'list':
       return interpretList(command, input, stdin);
     case 'read':
@@ -41,28 +68,65 @@ function interpretSingleCommand(command, input, stdin) {
   }
 }
 
-function interpretAssignment(assignment) {
-  // Get the variable name and value from the assignment object
-  const { variable, value } = assignment;
-  console.log('VARIABLE:', variable, value)
-
-  // Interpret the value of the assignment
-  let interpretedValue;
-  if (value.type === "string") {
-    interpretedValue = value.value;
-  } else if (value.type === "int") {
-    interpretedValue = parseInt(value.value);
-  } else if (value.type === "command") {
-    // Execute the command and get the result
-    interpretedValue = interpretPipedCommand(value.value);
+function interpretFunctionDeclaration(ast, scope) {
+  global[ast.head.name] = {};
+  global[ast.head.name].body = ast.body;
+  global[ast.head.name].params = {};
+  ast.head.params.forEach(param => {
+    global[ast.head.name].params[param] = undefined;
+  });
+  global[ast.head.name].fn = function (params) {
+    return start(global[ast.head.name].body, params);
   }
-
-  // Assign the interpreted value to the variable
-  global[variable] = interpretedValue;
 }
 
-function interpretPrint(command, input) {
-  return input.text;
+function interpretValue(ast, scope) {
+  if (ast) {
+    switch (ast.type) {
+      case 'variable':
+        return (scope && scope[ast.value]) || global[ast.value];
+      case 'number':
+      case 'string':
+      case 'decimal':
+      case 'integer':
+      case 'boolean':
+        return ast.value;
+      case 'template':
+        return ast.value.map(item => {
+          return interpretValue(item, scope)
+        }).join("");
+      case 'command':
+        return interpretPipedCommand(ast.value);
+    }
+  }
+}
+
+function interpretAssignment(assignment, scope) {
+  // Get the variable name and value from the assignment object
+  const { variable, value } = assignment;
+
+  // Interpret the value of the assignment
+  const interpretedValue = interpretValue(value, scope);
+
+  // Assign the interpreted value to the variable
+  if (scope)
+    scope[variable] = interpretedValue;
+  else
+    global[variable] = interpretedValue;
+}
+
+function interpretPrint(command, input, stdin, scope) {
+  let value = interpretValue(input.value, scope);
+  if (stdin)
+    value = stdin
+
+  console.log(value);
+  // return value;
+}
+
+function interpretReturn(command, input, stdin, scope) {
+  let value = interpretValue(input.value, scope);
+  return value;
 }
 
 function interpretList(command, input) {
@@ -97,8 +161,21 @@ function interpretExecute(command, input) {
 // Parse and interpret a program
 const file = fs.readFileSync(__dirname + '/test.bashy').toString();
 const ast = parser.parse(file);
-const out = ast.map(interpret)
-//const out = interpret(ast[0]);
-out.forEach(o => {
-  console.log(o)
-})
+
+function start(ast, scope) {
+  const out = [];
+  for (const sentence of ast) {
+    //console.log('SENTENCE:', sentence);
+    if (sentence && sentence.type === "Commands" && sentence.commands[0].command === "return") {
+      out.push(interpret(sentence, scope));
+      break;
+    }
+
+    out.push(interpret(sentence, scope));
+  }
+
+  const finalOut = out.filter(o => !!o);
+  return finalOut;
+}
+
+start(ast);

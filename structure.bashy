@@ -1,0 +1,63 @@
+$var = (
+  print "OK" < $input
+)
+
+hello: name
+  print $name
+
+increment: param1, param2
+  print (
+    print $ONE
+    > count
+    > verify
+  ) $otherParam
+  hello "myname" "other"
+  $wow = 1
+  list
+
+  store $file
+  print 1234
+  read
+  hello "Carlos" < (
+    print $input
+    > count
+  )
+
+  print "end of function"
+
+increment "hey" "tow"
+
+$out1, $out2, $out3, $out4 = 
+  | print "OK"
+  | request "GET" "http://google.com"
+  | hello "Carlos" < (
+      print $input
+      > count
+    )
+  | count
+
+[$array] =
+  | print "OK"
+  | request "GET" "http://google.com"
+  | hello "Carlos" < (
+      print $input
+      > count
+    )
+  | count
+
+[$outputs:2] = 
+  | print "OK"
+  | request "GET" "http://google.com"
+  | hello "Carlos" < (
+      print $input
+      > store
+    )
+  | read
+
+otherFunc: p1
+  print $m
+
+  hello
+  read < (
+    print "omg"
+  )

@@ -6,10 +6,14 @@ syn match mylangComment "//.*"
 syn match mylangComment "/\*\_.\{-}\*/"
 
 " Define the command syntax
-syn keyword mylangCommand print and or not list read filter replace cut count store execute sort merge
+syn match mylangCommand "\w\+\s"
+syn match mylangCommand2 "\w\+\n"
+
+" Define the function syntax
+syn match mylangFunction "\w\+:.*"
 
 " Define the variable syntax
-syn match mylangVariable "\w\+"
+syn match mylangVariable "\$\w\+"
 
 " Define the string syntax
 syn match mylangString "\".*\""
@@ -18,7 +22,7 @@ syn match mylangString "\".*\""
 syn match mylangNumber "\d\+"
 
 " Define the special characters
-syn match mylangSpecial "\|\|"
+"syn match mylangSpecial "\|\|"
 syn match mylangSpecial ">"
 syn match mylangSpecial "<"
 syn match mylangSpecial "&"
@@ -29,9 +33,6 @@ syn match mylangSpecial ")"
 " Define the operator syntax
 syn match mylangOperator "="
 syn match mylangOperator "by"
-
-" Define the function syntax
-syn match mylangFunction "(\w\+)\s*("
 
 " Highlight the comments
 hi def link mylangComment Comment

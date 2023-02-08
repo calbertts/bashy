@@ -1,6 +1,18 @@
-def myVar = "Hey"
-print myVar
+myName = "Carlos"
 
-list "/Users/calbertts/personal/bashy"
-  | replace "." by "-"
-  | count
+increment:
+  return 1987
+
+greetMe: parametro, param2
+  year = 1987
+
+  print `Hello $parametro`
+
+  dos = increment
+
+  print `DOS: ${increment 1}`
+
+  return $dos 
+
+result = greetMe $myName "March 14"
+print `END: $result`

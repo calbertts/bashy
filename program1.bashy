@@ -13,6 +13,15 @@ lista = [
   $variable
 ]
 
+// MAPS
+var = {
+  key1: "value",
+  [
+    print "KEY" > count < read $file
+  ]: print $var,
+  [1]: comma "one"
+}
+
 // LOOPS
 
 

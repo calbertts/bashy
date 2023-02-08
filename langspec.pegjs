@@ -10,9 +10,10 @@ Sentence =
   / Comment
   / Function
   / Commands
-  / AssigmentVariable
+  / AssigmentVariable  
   / Parallel
   / MathExpression
+  / BooleanExpression
 
 /******************************* TYPE OF SENTENCES */
 Comment "comment" = 
@@ -29,19 +30,11 @@ Commands =
   }
 
 AssigmentVariable = 
-  L variable:Variable __ "=" __ value:CommandParam EOS?
+  variable:VariableSymbol _ "=" _ value:CommandParam EOS?
   {
     return {
       type: "Assignment",
-      variable: variable.value,
-      value
-    }
-  }
-  / L variable:Variable __ "=" __ "(" __ value:CommandParam __ ")" EOS?
-  {
-    return {
-      type: "Assignment",
-      variable: variable.value,
+      variable: variable,
       value
     }
   }
@@ -72,6 +65,9 @@ Function =
 
 FunctionHead = 
   L name:FunctionName ":" _ params:FunctionParams? EOS L {
+    if (params && (new Set(params)).size !== params.length) {
+      error("There's a duplicated param name here: "+ JSON.stringify(params))
+    }
     return {
       name,
       params: params || []
@@ -87,7 +83,7 @@ FunctionParam = Variable { return text() }
   
 FunctionName = Variable { return text() }
 
-FunctionBody = (Indent _ L fl:Sentence L EOS? { return fl })*
+FunctionBody = (Indent _ L fl:Sentence L { return fl })*
 
 FunctionArgs =
   head:CommandParam tail:(" " _ cp:CommandParam { return cp })* {
@@ -97,7 +93,28 @@ FunctionArgs =
 
 
 /******************************* CONDITIONALS */
+BooleanExpression =
+  _ "("? __ head:BooleanTerm tail:(_ op:("and" / "or") _ term:BooleanTerm {return {op, term}})* __ ")"? _ "?" __ {
+      return {
+        type: "BooleanExpression",
+        value: [head, ...tail]
+      }
+    }
 
+BooleanTerm = 
+  head:Factor tail:(_ op:("not" / "xor")? _ factor:Factor {return {op, factor}})* {
+      return {
+        type: "BooleanTerm",
+        value: [head, ...tail]
+      }
+    }
+
+BooleanFactor = 
+  "(" _ expr:BooleanExpression _ ")" { return expr; }
+  / boolean:Boolean { return { type: "boolean", value: boolean} }
+  / command:PipedCommand { return {type: "command", command} }
+  / __ "(" __ command:PipedCommand __ ")" { return {type: "command", command} }
+  / variable:VariableSymbol { return {type: "variable", value: variable} }
 /******************************* CONDITIONALS END */
 
 
@@ -106,6 +123,22 @@ Parallel =
   L head:ParallelHead L
   L body:ParallelBody L
   {
+    if (head.outputType === "variables" && (new Set(head.outputVars)).size !== head.outputVars.length) {
+      error("There's a duplicated variable name here: "+ JSON.stringify(head.outputVars))
+    }
+    if (head.outputType === "variables" && body.length !== head.outputVars.length) {
+      error(
+        "The amout of vars: " + JSON.stringify(head.outputVars) + ", don't correspond to the amout of commands: " + body.length 
+      )
+    }
+    else if (head.outputType === "list" && head.outputList.concurrency > body.length) {
+      error(
+        "The variable: '" +
+        head.outputList.outputVar + 
+        "', has concurrency = "+ head.outputList.concurrency +" which is greater than the body commands"
+      )
+    }
+    
     return {
       type: "ParallelCommands",
       ...head,
@@ -116,13 +149,19 @@ Parallel =
   }
 
 ParallelBody =
-  (Indent _ ParallelOp _ L fl:CommandParam L EOS? { return fl })*
-  / (Indent _ ParallelOp ">" _ L fl:CommandParam L EOS? { return fl })*
+  (Indent _ L ParallelOp _ L fl:Generic L { return fl })*
 
 ParallelHead =
-  outputVars:ParallelOutputs __ "=" EOS {
+  outputVars:ParallelOutputs __ "=" EOS L {
     return {
+      outputType: "variables",
       outputVars: outputVars || []
+    }
+  }
+  / outputList:ParallelListOutput __ "=" EOS {
+    return {
+      outputType: "list",
+      outputList
     }
   }
 
@@ -130,8 +169,16 @@ ParallelOutputs =
   head:ParallelOutputVar tail:("," _ fp:ParallelOutputVar { return fp })* {
     return [head, ...tail]
   }
+  
+ParallelListOutput =
+  "[" outputVar:ParallelOutputVar ":"? concurrency:Integer? "]" {
+    return {
+      concurrency: concurrency ? concurrency.join("") : 1,
+      outputVar
+    }
+  }
 
-ParallelOutputVar = Variable { return text() }
+ParallelOutputVar = VariableSymbol { return text() }
   
 Indent = "  "
 ParallelOp = "|"
@@ -148,7 +195,9 @@ VariableValue =
   / variable:VariableSymbol { return { type: "variable", value: variable } }
   / mathExpr:MathExpression
   / list:List
-  / command:PipedCommand {
+  / map:Map
+  / booleanExpression:BooleanExpression
+  / "(" __ command:PipedCommand __ ")" {
     const [head, tail] = command
   	return { type: "command", value: [head, ...tail] }
   }
@@ -163,18 +212,7 @@ PipedCommand =
   }
 
 SingleCommand  = 
-  printCommand:Print { return printCommand }
-  / listCommand:ListCmd { return listCommand }
-  / readCommand:Read { return readCommand }
-  / filterCommand:Filter { return filterCommand }
-  / replaceCommand:Replace { return replaceCommand }
-  / cutCommand:Cut { return cutCommand }
-  / countCommand:Count { return countCommand }
-  / storeCommand:Store { return storeCommand }
-  / execCommand:Execute { return execCommand }
-  / sortCommand:Sort { return sortCommand }
-  / mergeCommand:Merge { return mergeCommand }
-  / genericCommand:Generic { return genericCommand }
+  genericCommand:Generic { return genericCommand }
 /******************************* COMMANDS TYPES END */
 
 
@@ -183,43 +221,39 @@ SingleCommand  =
 CommandParam =
   EOS {return null}
   / param:VariableValue { return param }
-  / "(" __ param:VariableValue __ ")" { return param }
+  // "(" __ param:VariableValue __ ")" { return param }
 
 CommandInput =
-  EOS { return {stdin: true} }
-  / __ In _ param:VariableValue { return param }
-  / __ In _ "(" __ input:VariableValue __ ")" { return input }
+  In _ input:VariableValue { return input }
+  / In __ "(" __ input:VariableValue __ ")" { return input }
+
+FunctionArgsX =
+  head:VariableValue tail:(" " _ cp:VariableValue { return cp })* {
+    return [head, ...tail]
+  }
 
 Generic = 
-  command:Variable _ params:FunctionArgs _ input:CommandInput? {
+  command:Variable EOS {
+    return {
+      command: command.value,
+      params: null,
+      input: {stdin: true}
+    }
+  }
+  / command:Variable _ params:FunctionArgsX? _ input:CommandInput? EOS {
   	return {
       command: command.value,
-      type: "custom",
-      params, input: !input ? {stdin: true} : input
+      params,
+      input: input ? input : {stdin: true}
     }
   }
 
-ListCmd =
-  command:"list" _ path:CommandParam? {
-  	return { command, path: !path ? {stdin: true} : path }
-  }
-
-Read = 
-  command:"read" _ file:CommandParam? {
-  	return { command, file: !file ? {stdin: true} : file }
-  }
-
-Print = command:"print" _ value:PrintInput? {
+BoolValue =
+  boolean:"true" { return { type: "boolean", value: boolean} }
+  / boolean:"false" { return { type: "boolean", value: boolean} }
+  
+Return = command:"return" _ value:CommandParam? {
   	return { command, value: !value ? {stdin: true} : value }
-  }
-
-PrintInput =
-  CommandParam
-  / CommandInput
-
-Filter = 
-  command:"filter" _ token:CommandParam _ input:CommandInput? {
-  	return { command, token, input: !input ? {stdin: true} : input }
   }
 
 Replace = 
@@ -230,16 +264,6 @@ Replace =
 Cut = 
   command:"cut" _ "by" _ value:CommandParam _ input:CommandInput? {
   	return { command, value, input: !input ? {stdin: true} : input }
-  }
-
-Count = 
-  command:"count" _ input:CommandInput? {
-    return { command, input: !input ? {stdin: true} : input }
-  }
-  
-Store =
-  command:"store" _ filename:CommandParam _ input:CommandInput? {
-  	return { command, filename, input }
   }
 
 Sort =
@@ -267,7 +291,6 @@ MergeInputs =
   {
     return [ head, ...tail ]
   }
-
 
 Execute = 
   command:"execute" _ interpreter:ExecuteOpts? _ value:CommandParam? _ input:CommandInput? {
@@ -336,7 +359,7 @@ BacktickString =
 BacktickStringContent =
   interpolation:InterpolationExpression { return interpolation }
   / escapedBacktick:EscapedBacktick { return escapedBacktick }
-  / characters:[^\\`$]+ { return characters.join("") }
+  / characters:[^\\`$]+ { return {type: "string", value: characters.join("")} }
 
 InterpolationExpression =
   "${" __ variable:VariableValue __ "}" { return variable }
@@ -481,7 +504,7 @@ Term =
 
 Factor = 
   "(" _ expr:MathExpression _ ")" { return expr; }
-  / number:Number { return {type: "number", value: number} }
+  / number:Number { return {type: "number", value: number.join("")} }
   / command:PipedCommand { return {type: "command", command} }
   / __ "(" __ command:PipedCommand __ ")" { return {type: "command", command} }
   / variable:VariableSymbol { return {type: "variable", value: variable} }
@@ -502,5 +525,31 @@ ListItem =
   / CommandInput
 /******************************* LISTS END */
 
+
+/******************************* MAPS */
+Map =
+  "{" __ items:(MapItem)* __ "}" {
+    return {
+      type: "Map",
+      value: items
+    }
+  }
+
+MapItem =
+  key:Variable ":" __ value:MapValue ","? __ {
+    return {
+      key, value
+    }
+  }
+  / "[" __ key:MapValue __ "]" ":" __ value:MapValue ","? __ {
+    return {
+      key, value
+    }
+  }
+  
+MapValue =
+  CommandParam
+  / CommandInput
+/******************************* MAPS END */
 
   

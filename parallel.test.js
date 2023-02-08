@@ -4,81 +4,153 @@ const parser = require('./parser')
 describe('parallel', () => {
   test('parallel assigments', () => {
     const test = 
-      `out1, out2 = 
-        | read $file1 > count < print "OK"
-        | false
-        | "hello"
-        | 1.2
-        | customCommand $param1 $param2
+      `
+[outputs:2] = 
+  | [
+      request "GET" "http://google.com",
+      request "GET" "http://facebook.com",
+      print "OK",
+      read file
+    ]
+
+[array] = 
+  | print "OK"
+  | request "GET" "http://google.com"
 
 out1, out2 = 
-        | read $file1
-        | print "OK" > count < (
-            read $file
-          )
-        | aaa "OK" "YES"`
+  | print "OK"
+  | request "GET" "http://google.com"
+`
 
     const expectedOutput = [
        {
           "type": "ParallelCommands",
-          "outputVars": [
-             "out1",
-             "out2"
-          ],
+          "outputType": "list",
+          "outputList": {
+             "concurrency": "2",
+             "outputVar": "outputs"
+          },
+          "commands": [
+             {
+                "type": "List",
+                "value": [
+                   {
+                      "type": "command",
+                      "value": [
+                         {
+                            "command": "request",
+                            "type": "custom",
+                            "params": [
+                               {
+                                  "type": "string",
+                                  "value": "GET"
+                               },
+                               {
+                                  "type": "string",
+                                  "value": "http://google.com"
+                               }
+                            ],
+                            "input": {
+                               "stdin": true
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "type": "command",
+                      "value": [
+                         {
+                            "command": "request",
+                            "type": "custom",
+                            "params": [
+                               {
+                                  "type": "string",
+                                  "value": "GET"
+                               },
+                               {
+                                  "type": "string",
+                                  "value": "http://facebook.com"
+                               }
+                            ],
+                            "input": {
+                               "stdin": true
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "type": "command",
+                      "value": [
+                         {
+                            "command": "print",
+                            "value": {
+                               "type": "string",
+                               "value": "OK"
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "type": "command",
+                      "value": [
+                         {
+                            "command": "read",
+                            "file": {
+                               "type": "command",
+                               "value": [
+                                  {
+                                     "command": "file",
+                                     "type": "custom",
+                                     "params": [
+                                        null
+                                     ],
+                                     "input": {
+                                        "stdin": true
+                                     }
+                                  }
+                               ]
+                            }
+                         }
+                      ]
+                   }
+                ]
+             }
+          ]
+       },
+       {
+          "type": "ParallelCommands",
+          "outputType": "list",
+          "outputList": {
+             "concurrency": 1,
+             "outputVar": "array"
+          },
           "commands": [
              {
                 "type": "command",
                 "value": [
                    {
-                      "command": "read",
-                      "file": {
-                         "type": "variable",
-                         "value": "file1"
-                      }
-                   },
-                   {
-                      "command": "count",
-                      "input": {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "OK"
-                               }
-                            }
-                         ]
+                      "command": "print",
+                      "value": {
+                         "type": "string",
+                         "value": "OK"
                       }
                    }
                 ]
              },
              {
-                "type": "boolean",
-                "value": false
-             },
-             {
-                "type": "string",
-                "value": "hello"
-             },
-             {
-                "type": "decimal",
-                "value": 1.2
-             },
-             {
                 "type": "command",
                 "value": [
                    {
-                      "command": "customCommand",
+                      "command": "request",
                       "type": "custom",
                       "params": [
                          {
-                            "type": "variable",
-                            "value": "param1"
+                            "type": "string",
+                            "value": "GET"
                          },
                          {
-                            "type": "variable",
-                            "value": "param2"
+                            "type": "string",
+                            "value": "http://google.com"
                          }
                       ],
                       "input": {
@@ -91,6 +163,7 @@ out1, out2 =
        },
        {
           "type": "ParallelCommands",
+          "outputType": "variables",
           "outputVars": [
              "out1",
              "out2"
@@ -100,38 +173,11 @@ out1, out2 =
                 "type": "command",
                 "value": [
                    {
-                      "command": "read",
-                      "file": {
-                         "type": "variable",
-                         "value": "file1"
-                      }
-                   }
-                ]
-             },
-             {
-                "type": "command",
-                "value": [
-                   {
                       "command": "print",
                       "value": {
                          "type": "string",
                          "value": "OK"
                       }
-                   },
-                   {
-                      "command": "count",
-                      "input": {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "read",
-                               "file": {
-                                  "type": "variable",
-                                  "value": "file"
-                               }
-                            }
-                         ]
-                      }
                    }
                 ]
              },
@@ -139,16 +185,16 @@ out1, out2 =
                 "type": "command",
                 "value": [
                    {
-                      "command": "aaa",
+                      "command": "request",
                       "type": "custom",
                       "params": [
                          {
                             "type": "string",
-                            "value": "OK"
+                            "value": "GET"
                          },
                          {
                             "type": "string",
-                            "value": "YES"
+                            "value": "http://google.com"
                          }
                       ],
                       "input": {
