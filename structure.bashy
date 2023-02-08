@@ -1,9 +1,48 @@
-$var = (
-  print "OK" < $input
+$simple = 'Simple Comma'
+$double = "Double Comma"
+$result = 1.456
+$brith = 1987
+$underAge = false
+$math = # $birth + print "NO" < "input"
+$emptyArrayVar = []
+$arrayVar = [
+  1,
+  $he,
+  (
+    hello 1 2 3 4 5 < "input"
+  ),
+  true
+]
+$emptyObj = {}
+$obj = {
+  one: 1
+  two: 2.3
+  [$hey]: $template
+  command: (
+    print "comamnd result"
+  )
+  [`tell me $why`]: true,
+  [(
+    print "TheKey"
+  )]: "wow"
+  aFunctionObj: !myfn
+}
+
+$commandResult = (
+  print "OK" < (
+    print $input
+    > size
+  )
+  > count
 )
 
 hello: name
   print $name
+
+  $template = `Hello: $var, an expression: ${(
+    print $hey
+    > count < $input
+  )}`
 
 increment: param1, param2
   print (
@@ -12,7 +51,7 @@ increment: param1, param2
     > verify
   ) $otherParam
   hello "myname" "other"
-  $wow = 1
+  $wok = 1
   list
 
   store $file
@@ -45,15 +84,6 @@ $out1, $out2, $out3, $out4 =
     )
   | count
 
-[$outputs:2] = 
-  | print "OK"
-  | request "GET" "http://google.com"
-  | hello "Carlos" < (
-      print $input
-      > store
-    )
-  | read
-
 otherFunc: p1
   print $m
 
@@ -61,3 +91,22 @@ otherFunc: p1
   read < (
     print "omg"
   )
+
+  [$outputs:2] = 
+    | print "OK"
+    | request "GET" "http://google.com"
+    | hello "Carlos" < (
+        print $input
+        > store
+      )
+    | read
+
+  $returnValue = "valor"
+
+
+[$salida] = 
+  | print "first" "second" true 1.3 456 < (
+      print "an input"
+    )
+  | request "GET" "http://google.com"
+  | hello "Carlos" < "Input here"

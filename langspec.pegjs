@@ -30,7 +30,7 @@ Commands =
   }
 
 AssigmentVariable = 
-  variable:VariableSymbol _ "=" _ value:CommandParam EOS?
+  __ variable:VariableSymbol _ "=" __ value:VariableValue EOS?
   {
     return {
       type: "Assignment",
@@ -196,11 +196,19 @@ VariableValue =
   / mathExpr:MathExpression
   / list:List
   / map:Map
+  / fn:FunctionObj
   / booleanExpression:BooleanExpression
   / "(" __ command:PipedCommand __ ")" {
     const [head, tail] = command
   	return { type: "command", value: [head, ...tail] }
   }
+  
+FunctionObj = "!" name:Variable {
+  return {
+    type: "function",
+    name
+  }
+}
 
 VariableSymbol = "$" variable:Variable { return variable.value }
 
@@ -225,22 +233,23 @@ CommandParam =
 
 CommandInput =
   In _ input:VariableValue { return input }
-  / In __ "(" __ input:VariableValue __ ")" { return input }
 
 FunctionArgsX =
   head:VariableValue tail:(" " _ cp:VariableValue { return cp })* {
     return [head, ...tail]
   }
+  
+CommandEnd = EOS
 
 Generic = 
-  command:Variable EOS {
+  command:Variable CommandEnd {
     return {
       command: command.value,
       params: null,
       input: {stdin: true}
     }
   }
-  / command:Variable _ params:FunctionArgsX? _ input:CommandInput? EOS {
+  / command:Variable _ params:FunctionArgsX? _ input:CommandInput? CommandEnd {
   	return {
       command: command.value,
       params,
@@ -513,16 +522,15 @@ Factor =
 
 /******************************* LISTS */
 List =
-  __ "[" __ head:ListItem tail:("," __ item:ListItem {return item})* ","? __ "]" {
+  __ "[" __ head:ListItem? tail:("," __ item:ListItem? {return item})* ","? __ "]" {
     return {
       type: "List",
-      value: [head, ...tail]
+      value: !head || !tail ? [] : [head, ...tail]
     }
   }
   
 ListItem =
-  CommandParam
-  / CommandInput
+  VariableValue
 /******************************* LISTS END */
 
 
@@ -547,9 +555,7 @@ MapItem =
     }
   }
   
-MapValue =
-  CommandParam
-  / CommandInput
+MapValue = VariableValue
 /******************************* MAPS END */
 
   
