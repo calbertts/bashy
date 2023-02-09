@@ -1,18 +1,29 @@
-myName = "Carlos"
+$name = "global thing"
 
-increment:
-  return 1987
+print: name
+  execute -bash `echo $name`
 
-greetMe: parametro, param2
-  year = 1987
+pwd:
+  execute -bash "pwd"
 
-  print `Hello $parametro`
+list: directory
+  execute -bash `ls $directory`
 
-  dos = increment
+read: file
+  execute -bash `cat $file`
 
-  print `DOS: ${increment 1}`
+allTest:
+  $helloText = "Hello world"
+  $age = 36
 
-  return $dos 
+  print `$helloText, $age`
+  print "-----"
+  print $name
+  print "-----"
+  pwd
+  print "-----"
+  list "~"
 
-result = greetMe $myName "March 14"
-print `END: $result`
+allTest
+
+read "~/ISSUE_TEMPLATE/Bug-Report.md"

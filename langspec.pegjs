@@ -336,6 +336,7 @@ BacktickString =
 BacktickStringContent =
   interpolation:InterpolationExpression { return interpolation }
   / escapedBacktick:EscapedBacktick { return escapedBacktick }
+  / escapedVarSymbol:EscapedVarSymbol { return escapedVarSymbol }
   / characters:[^\\`$]+ { return {type: "string", value: characters.join("")} }
 
 InterpolationExpression =
@@ -344,6 +345,9 @@ InterpolationExpression =
   
 EscapedBacktick = 
   "\\`" { return "`" }
+
+EscapedVarSymbol = 
+  "\\$" { return {type: "string", value: "$"} }
 
 DoubleStringCharacter
   = !('"') SourceCharacter { return text(); }

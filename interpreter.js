@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { exec, spawn } = require('node:child_process');
 const parser = require('./parser')
 
 function interpret(ast, scope) {
@@ -7,14 +8,16 @@ function interpret(ast, scope) {
   }
 
   switch (ast.type) {
-    case 'Commands':
+    case 'CommandExecution':
       return interpretPipedCommand(ast.commands, scope);
     case 'Assignment':
       interpretAssignment(ast, scope);
       break;
-    case 'CustomCommand':
-      interpretFunctionDeclaration(ast, scope);
+    case 'CommandDefinition':
+      interpretCommandDefinition(ast, scope);
       break;
+    default:
+      console.log("ERROR:", ast.type)
   }
 }
 
@@ -28,24 +31,28 @@ function interpretPipedCommand(commands, scope) {
 }
 
 function interpretSingleCommand(command, type, input, stdin, scope) {
-  if (type === "custom") {
-    const paramsValues = input.params.map(param => {
-      return interpretValue(param, scope);
-    });
+  // console.log('single', command, type, input, stdin, scope);
 
-    Object.keys(global[command].params).forEach((key, index) => {
-      global[command].params[key] = paramsValues[index];
-    });
-
-    global[command].params["__stdin"] = stdin;
-
-    const fn = global[command].fn;
-    const fnResult = fn(global[command].params);
-    console.log('FN RESULT:', fnResult);
-    return fnResult;
+  if (command == "execute") {
+    return interpretExecute(command, input, stdin, scope);
   }
 
-  switch (command) {
+  const paramsValues = [...input.params || []].map(param => {
+    return interpretValue(param, scope);
+  });
+
+  Object.keys(global[command].params).forEach((key, index) => {
+    global[command].params[key] = paramsValues[index];
+  });
+
+  global[command].params["__stdin"] = stdin;
+
+  const fn = global[command].fn;
+  const fnResult = fn(global[command].params);
+  // console.log('FN RESULT:', fnResult);
+  return fnResult;
+
+  /*switch (command) {
     case 'print':
       interpretPrint(command, input, stdin, scope);
       break;
@@ -64,11 +71,12 @@ function interpretSingleCommand(command, type, input, stdin, scope) {
     case 'count':
       return interpretCount(command, input, stdin);
     case 'execute':
+      console.log('exx')
       return interpretExecute(command, input, stdin);
-  }
+  }*/
 }
 
-function interpretFunctionDeclaration(ast, scope) {
+function interpretCommandDefinition(ast, scope) {
   global[ast.head.name] = {};
   global[ast.head.name].body = ast.body;
   global[ast.head.name].params = {};
@@ -154,8 +162,17 @@ function interpretCount(command, input, stdin) {
   return stdin.split('\n').length;
 }
 
-function interpretExecute(command, input) {
-  return interpretPipedCommand(command.value);
+function interpretExecute(command, input, stdin, scope) {
+  const code = interpretValue(input.value, scope);
+  // console.log('code:', code);
+  exec(code, (err, stdout, stderr) => {
+    if (err) {
+      console.error(stderr);
+      return;
+    }
+    console.log(stdout.trim());
+  });
+  // return interpretPipedCommand(command.value);
 }
 
 // Parse and interpret a program
