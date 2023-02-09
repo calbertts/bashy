@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const { exec, spawn } = require('node:child_process');
 const parser = require('./parser')
 
@@ -35,6 +36,10 @@ function interpretSingleCommand(command, type, input, stdin, scope) {
 
   if (command == "execute") {
     return interpretExecute(command, input, stdin, scope);
+  }
+
+  if (command == "eval") {
+    return interpretEval(command, input, stdin, scope);
   }
 
   const paramsValues = [...input.params || []].map(param => {
@@ -175,9 +180,20 @@ function interpretExecute(command, input, stdin, scope) {
   // return interpretPipedCommand(command.value);
 }
 
+function interpretEval(command, input, stdin, scope) {
+  const code = interpretValue(input.value, scope);
+
+  const fileContent = fs.readFileSync(path.resolve(__dirname + "/" + code)).toString();
+  const ast = parser.parse(fileContent);
+
+  start(ast, scope);
+}
+
 // Parse and interpret a program
 const file = fs.readFileSync(__dirname + '/test.bashy').toString();
 const ast = parser.parse(file);
+
+// console.log('parser:', JSON.stringify(ast, null, 2))
 
 function start(ast, scope) {
   const out = [];

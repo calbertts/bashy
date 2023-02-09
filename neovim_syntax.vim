@@ -21,6 +21,12 @@ syn match mylangString "\".*\""
 " Define the number syntax
 syn match mylangNumber "\d\+"
 
+" Exec syntax
+syn match mylangOperator "\~\$"
+
+" Eval syntax
+syn match mylangOperator "\~\~"
+
 " Define the special characters
 "syn match mylangSpecial "\|\|"
 syn match mylangSpecial ">"

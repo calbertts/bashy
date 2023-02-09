@@ -1,18 +1,9 @@
+~~ ./bash-lib.bashy
+
 $name = "global thing"
 
-print: name
-  execute -bash `echo $name`
-
-pwd:
-  execute -bash "pwd"
-
-list: directory
-  execute -bash `ls $directory`
-
-read: file
-  execute -bash `cat $file`
-
 allTest:
+  print `STDIN: $__stdin`
   $helloText = "Hello world"
   $age = 36
 
@@ -24,6 +15,7 @@ allTest:
   print "-----"
   list "~"
 
-allTest
+list "."
+> filter ".bashy"
 
 read "~/ISSUE_TEMPLATE/Bug-Report.md"

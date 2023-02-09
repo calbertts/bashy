@@ -1,0 +1,14 @@
+print: name
+  ~$ -bash `echo $name`
+
+pwd:
+  ~$ -bash "pwd"
+
+list: directory
+  ~$ -bash `ls $directory`
+
+read: file
+  ~$ -bash `cat $file`
+
+filter: pattern
+  ~$ -bash `echo $__stdin | grep $pattern`

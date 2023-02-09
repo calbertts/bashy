@@ -10,13 +10,25 @@ Sentence =
   / Comment
   / CommandDefinition
   / Commands
-  / AssigmentVariable  
+  / AssigmentVariable
+  / Parallel
+  / MathExpression
+  / BooleanExpression
+  
+CommandSentence = 
+  !."\n"
+  / Comment
+  / CommandDefinition {
+    error("Nested commands definition isn't allowed")
+  }
+  / Commands
+  / AssigmentVariable
   / Parallel
   / MathExpression
   / BooleanExpression
 
 /******************************* TYPE OF SENTENCES */
-Comment "comment" = 
+Comment = 
   MultiLineComment
   / SingleLineComment
 
@@ -43,16 +55,16 @@ AssigmentVariable =
 
 
 /******************************* COMMENTS TYPES */
-SingleLineComment
+SingleLineComment "single line comment"
   = "//" (!LineTerminator SourceCharacter)* {return}
 
-MultiLineComment
+MultiLineComment "multiline comment"
   = "/*" (!"*/" SourceCharacter)* "*/" {return}
 /******************************* COMMENTS TYPES END */
 
 
 /******************************* Commands */
-CommandDefinition = 
+CommandDefinition "command definition" = 
   head:CommandHead
   body:CommandBody
   {
@@ -63,7 +75,7 @@ CommandDefinition =
     }
   }
 
-CommandHead = 
+CommandHead "command head" = 
   L name:CommandName ":" _ params:CommandArgs? _ "-"? _ flags:Map? EOS L {
     if (params && (new Set(params)).size !== params.length) {
       error("There's a duplicated param name here: "+ JSON.stringify(params))
@@ -75,21 +87,21 @@ CommandHead =
     }
   }
 
-CommandArgs =
-  head:CommandParam tail:("," _ fp:CommandParam { return fp })* {
+CommandArgs "command arguments" =
+  head:CommandArg tail:("," _ fp:CommandArg { return fp })* {
     return [head, ...tail]
   }
 
-CommandParam = Variable { return text() }
+CommandArg "command argument" = Variable { return text() }
   
-CommandName = Variable { return text() }
+CommandName "command name" = Variable { return text() }
 
-CommandBody = (Indent _ L fl:Sentence L { return fl })*
+CommandBody "command body" = (Indent L fl:CommandSentence L { return fl })*
 /******************************* FUNCTIONS END */
 
 
 /******************************* CONDITIONALS */
-BooleanExpression =
+BooleanExpression "boolean expression" =
   _ "("? __ head:BooleanTerm tail:(_ op:("and" / "or") _ term:BooleanTerm {return {op, term}})* __ ")"? _ "?" __ {
       return {
         type: "BooleanExpression",
@@ -97,7 +109,7 @@ BooleanExpression =
       }
     }
 
-BooleanTerm = 
+BooleanTerm "boolean term" = 
   head:Factor tail:(_ op:("not" / "xor")? _ factor:Factor {return {op, factor}})* {
       return {
         type: "BooleanTerm",
@@ -105,7 +117,7 @@ BooleanTerm =
       }
     }
 
-BooleanFactor = 
+BooleanFactor "boolean factor" = 
   "(" _ expr:BooleanExpression _ ")" { return expr; }
   / boolean:Boolean { return { type: "boolean", value: boolean} }
   / command:PipedCommand { return {type: "command", command} }
@@ -115,7 +127,7 @@ BooleanFactor =
 
 
 /******************************* PARALLELS */
-Parallel = 
+Parallel "parallel section" = 
   L head:ParallelHead L
   L body:ParallelBody L
   {
@@ -144,10 +156,10 @@ Parallel =
     }
   }
 
-ParallelBody =
+ParallelBody "parallel body" =
   (Indent _ L ParallelOp _ L fl:Command L { return fl })*
 
-ParallelHead =
+ParallelHead "parallel head" =
   outputVars:ParallelOutputs __ "=" EOS L {
     return {
       outputType: "variables",
@@ -161,12 +173,12 @@ ParallelHead =
     }
   }
 
-ParallelOutputs =
+ParallelOutputs "parallel heads" =
   head:ParallelOutputVar tail:("," _ fp:ParallelOutputVar { return fp })* {
     return [head, ...tail]
   }
   
-ParallelListOutput =
+ParallelListOutput "parallel list output" =
   "[" outputVar:ParallelOutputVar ":"? concurrency:Integer? "]" {
     return {
       concurrency: concurrency ? concurrency.join("") : 1,
@@ -174,15 +186,15 @@ ParallelListOutput =
     }
   }
 
-ParallelOutputVar = VariableSymbol { return text() }
+ParallelOutputVar "parallel output variable" = VariableSymbol { return text() }
   
-Indent = "  "
-ParallelOp = "|"
+Indent "indent" = "  "
+ParallelOp "parallel operator" = "|"
 
 /******************************* PARALLELS END */
 
 /******************************* COMMANDS AND VARIABLE TYPES */
-VariableValue =
+VariableValue "variable value" =
   decimal:Decimal { return { type: "decimal", value: decimal} }
   / integer:Integer { return { type: "integer", value: parseInt(integer.join(""))} }
   / boolean:Boolean { return { type: "boolean", value: boolean} }
@@ -199,21 +211,22 @@ VariableValue =
   	return { type: "command", value: [head, ...tail] }
   }
   
-FunctionObj = "!" name:Variable {
+FunctionObj "function object" = "!" name:Variable {
   return {
     type: "function",
     name
   }
 }
 
-VariableSymbol = "$" variable:Variable { return variable.value }
+VariableSymbol "variable symbol" = "$" variable:Variable { return variable.value }
 
 PipedCommand =
   head:SingleCommand 
   tail:(LineTerminatorSequence? __ Pipe " " item:SingleCommand { return item })*
 
 SingleCommand  = 
-  executeCommand:Execute { return executeCommand }
+  evaluate:Evaluate { return evaluate }
+  / executeCommand:Execute { return executeCommand }
   / genericCommand:Command { return genericCommand }
 /******************************* COMMANDS TYPES END */
 
@@ -230,13 +243,13 @@ CommandParams =
   
 CommandEnd = EOS
 
-FlagName = t:[a-zA-Z_-]+ { return {value: t.join("")} }
+FlagName "flag name" = t:[a-zA-Z_-]+ { return {value: t.join("")} }
 
-Flag = 
+Flag "command flag" = 
   "-"flag:Variable { return {flag, value: true} }
   / "--"flag:FlagName "="? value:VariableValue? { return {flag, value} }
 
-Flags = flags:(flag:Flag _? {return flag})* {
+Flags "command flags" = flags:(flag:Flag _? {return flag})* {
   return flags.reduce((obj, flag) => {
     obj[flag.flag.value] = flag.value ? flag.value : !flag.value;
     return obj;
@@ -261,21 +274,39 @@ Command =
     }
   }
 
-Return = command:"return" _ value:VariableValue? {
+Return "return sentence" = command:"return" _ value:VariableValue? {
   	return { command, value: !value ? {stdin: true} : value }
   }
 
-Execute = 
-  command:"execute" _ interpreter:ExecuteOpts? _ value:VariableValue? _ input:CommandInput? {
+Execute "execute command" = 
+  command:"~$" _ interpreter:ExecuteOpts? _ value:VariableValue? _ input:CommandInput? {
     return {
     	command, 
         interpreter: !interpreter ? { type: "string", value: "bashy" } : interpreter, 
         value: !value ? input : value
     }
   }
+
+EvaluateFile = [a-zA-Z0-9-_\/\.]+ {return text()}
+Evaluate "bashy evaluation" = 
+  command:"~~" _ file:EvaluateFile {
+    return {
+      type: "eval",
+      value: {
+        type: "string",
+        value: file
+      }
+    }
+  }
+  / command:"~~" _ file:VariableValue {
+    return {
+      type: "eval",
+      value: file
+    }
+  }
   
-ExecInterpreter = [a-zA-Z0-9-_\/\.]+ {return text()}
-ExecuteOpts = 
+ExecInterpreter "command execution interpreter" = [a-zA-Z0-9-_\/\.]+ {return text()}
+ExecuteOpts "command execution options" = 
   "-"cp:ExecInterpreter {
   	return {
       type: "string",
@@ -288,13 +319,13 @@ ExecuteOpts =
 
 
 /******************************* TEXT TYPES */
-Text = [a-zA-Z0-9_]+
+Text "text" = [a-zA-Z0-9_]+
 
-String = StringLiteral
+String "string literal" = StringLiteral
 
-Integer = [0-9]+
+Integer "integer" = [0-9]+
 
-Decimal
+Decimal "decimal"
   = DecimalIntegerLiteral "." DecimalDigit* {
       return parseFloat(text())
     }
@@ -302,21 +333,21 @@ Decimal
       return parseFloat(text())
     }
 
-Number =
+Number "number" =
   Integer
   / Decimal
 
-DecimalIntegerLiteral
+DecimalIntegerLiteral "decimal integer literal"
   = "0"
   / NonZeroDigit DecimalDigit*
 
-DecimalDigit
+DecimalDigit "decimal digit"
   = [0-9]
 
-NonZeroDigit
+NonZeroDigit "non zero digit"
   = [1-9]
 
-Boolean =
+Boolean "boolean" =
   "true" { return true }
   / "false" { return false }
 
@@ -328,12 +359,12 @@ StringLiteral "string"
       return chars.join("");
     }
 
-BacktickString =
+BacktickString "backtick string" =
   "`" content:BacktickStringContent* "`" {
     return content;
   }
   
-BacktickStringContent =
+BacktickStringContent "string backtick content" =
   interpolation:InterpolationExpression { return interpolation }
   / escapedBacktick:EscapedBacktick { return escapedBacktick }
   / escapedVarSymbol:EscapedVarSymbol { return escapedVarSymbol }
@@ -343,33 +374,22 @@ InterpolationExpression =
   "${" __ variable:VariableValue __ "}" { return variable }
   / variable:VariableSymbol { return {type: "variable", value: variable} }
   
-EscapedBacktick = 
+EscapedBacktick "escaped backtick" = 
   "\\`" { return "`" }
 
-EscapedVarSymbol = 
+EscapedVarSymbol "escaped var symbol" = 
   "\\$" { return {type: "string", value: "$"} }
 
-DoubleStringCharacter
+DoubleStringCharacter "double string character"
   = !('"') SourceCharacter { return text(); }
   / "\\" sequence:EscapeSequence { return sequence; }
 
-SingleStringCharacter
+SingleStringCharacter "single string character"
   = !("'") SourceCharacter { return text(); }
   / "\\" sequence:EscapeSequence { return sequence; }
 /******************************* TEXT TYPES END */
 
-
-
-// Command = Text
-Token = t:Text
-
-DirectoryFile = 
-  DirectoryRegex
-  / variable:Variable { return { type: "variable", value: variable.value } }
-
-DirectoryRegex = '"' directory:[a-zA-Z0-9|~|\/|$|\.]+ '"' { return directory.join("") }
-
-Variable = t:Text { return {value: t.join("")} }
+Variable "variable text" = t:Text { return {value: t.join("")} }
 
 // LITERAL CONSTANTS
 Pipe = ">"
@@ -387,7 +407,7 @@ CharacterEscapeSequence
   = SingleEscapeCharacter
   / NonEscapeCharacter
 
-SingleEscapeCharacter
+SingleEscapeCharacter "single escape character"
   = "'"
   / '"'
   / "\\"
@@ -398,37 +418,37 @@ SingleEscapeCharacter
   / "t"  { return "\t"; }
   / "v"  { return "\v"; }
 
-NonEscapeCharacter
+NonEscapeCharacter "non escape character"
   = !(EscapeCharacter) SourceCharacter { return text(); }
 
-EscapeCharacter
+EscapeCharacter "escape character"
   = SingleEscapeCharacter
   / DecimalDigit
   / "x"
   / "u"
 
-HexEscapeSequence
+HexEscapeSequence "hexadeimal escape sequence"
   = "x" digits:$(HexDigit HexDigit) {
       return String.fromCharCode(parseInt(digits, 16));
     }
 
-UnicodeEscapeSequence
+UnicodeEscapeSequence "unicode escape sequence"
   = "u" digits:$(HexDigit HexDigit HexDigit HexDigit) {
       return String.fromCharCode(parseInt(digits, 16));
     }
 
-SourceCharacter
+SourceCharacter "source character"
   = .
   
-HexDigit
+HexDigit "hexadecimal digit"
   = [0-9a-f]i
   
-EOS
+EOS "end of sentence"
   = 
   _ SingleLineComment? LineTerminatorSequence
   / __ EOF
 
-EOF
+EOF "end of file"
   = !.
 
 MultiLineCommentNoLineTerminator
@@ -462,12 +482,12 @@ __
 _
   = (WhiteSpace / MultiLineCommentNoLineTerminator)*
 
-L = 
+L "new line" = 
 	(LineTerminatorSequence / Comment)*
 
 
 /******************************* MATH EXPR */
-MathExpression =
+MathExpression "math expression" =
   "#" _ head:Term tail:(_ op:("+" / "-") _ term:Term {return {op, term}})* EOS? {
       return {
         type: "mathExpression",
@@ -475,7 +495,7 @@ MathExpression =
       }
     }
 
-Term = 
+Term "term" = 
   head:Factor tail:(_ op:("*" / "/") _ factor:Factor {return {op, factor}})* {
       return {
         type: "mathTerm",
@@ -483,7 +503,7 @@ Term =
       }
     }
 
-Factor = 
+Factor "factor" = 
   "(" _ expr:MathExpression _ ")" { return expr; }
   / number:Number { return {type: "number", value: number.join("")} }
   / command:PipedCommand { return {type: "command", command} }
@@ -493,7 +513,7 @@ Factor =
 
 
 /******************************* LISTS */
-List =
+List "list" =
   __ "[" __ head:ListItem? tail:("," __ item:ListItem? {return item})* ","? __ "]" {
     return {
       type: "List",
@@ -501,13 +521,13 @@ List =
     }
   }
   
-ListItem =
+ListItem "list item" =
   VariableValue
 /******************************* LISTS END */
 
 
 /******************************* MAPS */
-Map =
+Map "map" =
   "{" __ items:(MapItem)* __ "}" {
     return {
       type: "Map",
@@ -515,7 +535,7 @@ Map =
     }
   }
 
-MapItem =
+MapItem "map item" =
   key:Variable ":" __ value:MapValue ","? __ {
     return {
       key, value
@@ -527,7 +547,7 @@ MapItem =
     }
   }
   
-MapValue = VariableValue
+MapValue "map value" = VariableValue
 /******************************* MAPS END */
 
   
