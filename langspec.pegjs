@@ -8,7 +8,7 @@ Sentences =
 Sentence = 
   !."\n"
   / Comment
-  / Function
+  / CommandDefinition
   / Commands
   / AssigmentVariable  
   / Parallel
@@ -24,7 +24,7 @@ Commands =
   L command:PipedCommand EOS?
   {
     return {
-      type: "Commands",
+      type: "CommandExecution",
       commands: [command[0], ...command[1]]
     }
   }
@@ -51,20 +51,20 @@ MultiLineComment
 /******************************* COMMENTS TYPES END */
 
 
-/******************************* FUNCTIONS */
-Function = 
-  head:FunctionHead
-  body:FunctionBody
+/******************************* Commands */
+CommandDefinition = 
+  head:CommandHead
+  body:CommandBody
   {
     return {
-      type: "CustomCommand",
+      type: "CommandDefinition",
       head,
       body
     }
   }
 
-FunctionHead = 
-  L name:FunctionName ":" _ params:FunctionParams? _ "-"? _ flags:Map? EOS L {
+CommandHead = 
+  L name:CommandName ":" _ params:CommandArgs? _ "-"? _ flags:Map? EOS L {
     if (params && (new Set(params)).size !== params.length) {
       error("There's a duplicated param name here: "+ JSON.stringify(params))
     }
@@ -75,21 +75,16 @@ FunctionHead =
     }
   }
 
-FunctionParams =
-  head:FunctionParam tail:("," _ fp:FunctionParam { return fp })* {
+CommandArgs =
+  head:CommandParam tail:("," _ fp:CommandParam { return fp })* {
     return [head, ...tail]
   }
 
-FunctionParam = Variable { return text() }
+CommandParam = Variable { return text() }
   
-FunctionName = Variable { return text() }
+CommandName = Variable { return text() }
 
-FunctionBody = (Indent _ L fl:Sentence L { return fl })*
-
-FunctionArgs =
-  head:CommandParam tail:(" " _ cp:CommandParam { return cp })* {
-    return [head, ...tail]
-  }
+CommandBody = (Indent _ L fl:Sentence L { return fl })*
 /******************************* FUNCTIONS END */
 
 
@@ -150,7 +145,7 @@ Parallel =
   }
 
 ParallelBody =
-  (Indent _ L ParallelOp _ L fl:Generic L { return fl })*
+  (Indent _ L ParallelOp _ L fl:Command L { return fl })*
 
 ParallelHead =
   outputVars:ParallelOutputs __ "=" EOS L {
@@ -215,29 +210,20 @@ VariableSymbol = "$" variable:Variable { return variable.value }
 
 PipedCommand =
   head:SingleCommand 
-  //tail:(LineTerminatorSequence? __ Pipe " " item:SingleCommand { return item })*
-  tail:(_ Pipe " " item:SingleCommand { return item })*
-  {
-    return [ head, tail ]
-  }
+  tail:(LineTerminatorSequence? __ Pipe " " item:SingleCommand { return item })*
 
 SingleCommand  = 
   executeCommand:Execute { return executeCommand }
-  / genericCommand:Generic { return genericCommand }
+  / genericCommand:Command { return genericCommand }
 /******************************* COMMANDS TYPES END */
 
 
 
 /******************************* COMMANDS SYNTAX */
-CommandParam =
-  EOS {return null}
-  / param:VariableValue { return param }
-  // "(" __ param:VariableValue __ ")" { return param }
-
 CommandInput =
   In _ input:VariableValue { return input }
 
-FunctionArgsX =
+CommandParams =
   head:VariableValue tail:(" " _ cp:VariableValue { return cp })* {
     return [head, ...tail]
   }
@@ -257,7 +243,7 @@ Flags = flags:(flag:Flag _? {return flag})* {
   }, {});
 }
 
-Generic = 
+Command = 
   command:Variable _? flags:Flags? CommandEnd {
     return {
       command: command.value,
@@ -266,7 +252,7 @@ Generic =
       input: {stdin: true}
     }
   }
-  / command:Variable _? flags:Flags? _ params:FunctionArgsX? _ input:CommandInput? CommandEnd {
+  / command:Variable _? flags:Flags? _ params:CommandParams? _ input:CommandInput? CommandEnd {
   	return {
       command: command.value,
       params,
@@ -275,19 +261,12 @@ Generic =
     }
   }
 
-Return = command:"return" _ value:CommandParam? {
+Return = command:"return" _ value:VariableValue? {
   	return { command, value: !value ? {stdin: true} : value }
   }
 
-MergeInputs =
-  __ head:CommandParam 
-  __ tail:(LineTerminatorSequence? __ "," __ item:CommandParam { return item })*
-  {
-    return [ head, ...tail ]
-  }
-
 Execute = 
-  command:"execute" _ interpreter:ExecuteOpts? _ value:CommandParam? _ input:CommandInput? {
+  command:"execute" _ interpreter:ExecuteOpts? _ value:VariableValue? _ input:CommandInput? {
     return {
     	command, 
         interpreter: !interpreter ? { type: "string", value: "bashy" } : interpreter, 
@@ -295,11 +274,15 @@ Execute =
     }
   }
   
+ExecInterpreter = [a-zA-Z0-9-_\/\.]+ {return text()}
 ExecuteOpts = 
-  "-bashy" { return { type: "string", value: "bashy" } }
-  / "-bash" { return { type: "string", value: "bash" } }
-  / "-sh" { return { type: "string", value: "sh" } }
-  / "-"cp:Variable { return cp }
+  "-"cp:ExecInterpreter {
+  	return {
+      type: "string",
+      value: cp
+    }
+  }
+  / "-"variable:VariableValue { return variable }
 /******************************* COMMANDS SYNTAX END */
   
 

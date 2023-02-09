@@ -4,145 +4,109 @@ const parser = require('./parser')
 describe('lists', () => {
   test('should parse lists', () => {
     const test = 
-      `myList = [
-         otherFn 1 print "OK" read $file,
-         $var,
-         "value",
-         2.4,
-         3,
-         true,
-         fn 4.5 "value",
-         \`Template with $var\`,
-         print "OK" > list,
-         $myVariable,
-         # 5 + 6 + $var,
-         false
-      ]
-
-print [1, 2, print "OK", fn $p1 $p2]`
+      `
+$arrayVar = [
+  1,
+  $he,
+  "HEY",
+  (
+    hello $var 2 (
+      print "OK"
+    ) 4 5 < "input"
+  ),
+  (
+    hello
+  ),
+  true,
+  # 5 + 6 + $var,
+  false,
+  \`Template with $var\`,
+]`
 
     const expectedOutput = [
        {
           "type": "Assignment",
-          "variable": "myList",
+          "variable": "arrayVar",
           "value": {
              "type": "List",
              "value": [
                 {
+                   "type": "integer",
+                   "value": 1
+                },
+                {
+                   "type": "variable",
+                   "value": "he"
+                },
+                {
+                   "type": "string",
+                   "value": "HEY"
+                },
+                {
                    "type": "command",
                    "value": [
                       {
-                         "command": "otherFn",
-                         "type": "custom",
+                         "command": "hello",
                          "params": [
                             {
+                               "type": "variable",
+                               "value": "var"
+                            },
+                            {
                                "type": "integer",
-                               "value": 1
+                               "value": 2
                             },
                             {
                                "type": "command",
                                "value": [
                                   {
                                      "command": "print",
-                                     "value": {
-                                        "type": "string",
-                                        "value": "OK"
+                                     "params": [
+                                        {
+                                           "type": "string",
+                                           "value": "OK"
+                                        }
+                                     ],
+                                     "flags": {},
+                                     "input": {
+                                        "stdin": true
                                      }
                                   }
                                ]
                             },
                             {
-                               "type": "command",
-                               "value": [
-                                  {
-                                     "command": "read",
-                                     "file": {
-                                        "type": "variable",
-                                        "value": "file"
-                                     }
-                                  }
-                               ]
+                               "type": "integer",
+                               "value": 4
+                            },
+                            {
+                               "type": "integer",
+                               "value": 5
                             }
                          ],
+                         "flags": {},
                          "input": {
-                            "stdin": true
+                            "type": "string",
+                            "value": "input"
                          }
                       }
                    ]
                 },
                 {
-                   "type": "variable",
-                   "value": "var"
-                },
-                {
-                   "type": "string",
-                   "value": "value"
-                },
-                {
-                   "type": "decimal",
-                   "value": 2.4
-                },
-                {
-                   "type": "integer",
-                   "value": 3
+                   "type": "command",
+                   "value": [
+                      {
+                         "command": "hello",
+                         "params": null,
+                         "flags": {},
+                         "input": {
+                            "stdin": true
+                         }
+                      }
+                   ]
                 },
                 {
                    "type": "boolean",
                    "value": true
-                },
-                {
-                   "type": "command",
-                   "value": [
-                      {
-                         "command": "fn",
-                         "type": "custom",
-                         "params": [
-                            {
-                               "type": "decimal",
-                               "value": 4.5
-                            },
-                            {
-                               "type": "string",
-                               "value": "value"
-                            }
-                         ],
-                         "input": {
-                            "stdin": true
-                         }
-                      }
-                   ]
-                },
-                {
-                   "type": "template",
-                   "value": [
-                      "Template with ",
-                      {
-                         "type": "variable",
-                         "value": "var"
-                      }
-                   ]
-                },
-                {
-                   "type": "command",
-                   "value": [
-                      {
-                         "command": "print",
-                         "value": {
-                            "type": "string",
-                            "value": "OK"
-                         }
-                      },
-                      {
-                         "command": "list",
-                         "path": {
-                            "stdin": true
-                         }
-                      }
-                   ]
-                },
-                {
-                   "type": "variable",
-                   "value": "myVariable"
                 },
                 {
                    "type": "mathExpression",
@@ -152,9 +116,7 @@ print [1, 2, print "OK", fn $p1 $p2]`
                          "value": [
                             {
                                "type": "number",
-                               "value": [
-                                  "5"
-                               ]
+                               "value": "5"
                             }
                          ]
                       },
@@ -165,9 +127,7 @@ print [1, 2, print "OK", fn $p1 $p2]`
                             "value": [
                                {
                                   "type": "number",
-                                  "value": [
-                                     "6"
-                                  ]
+                                  "value": "6"
                                }
                             ]
                          }
@@ -189,66 +149,25 @@ print [1, 2, print "OK", fn $p1 $p2]`
                 {
                    "type": "boolean",
                    "value": false
-                }
-             ]
-          }
-       },
-       {
-          "type": "Commands",
-          "commands": [
-             {
-                "command": "print",
-                "value": {
-                   "type": "List",
+                },
+                {
+                   "type": "template",
                    "value": [
                       {
-                         "type": "integer",
-                         "value": 1
+                         "type": "string",
+                         "value": "Template with "
                       },
                       {
-                         "type": "integer",
-                         "value": 2
-                      },
-                      {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "OK"
-                               }
-                            }
-                         ]
-                      },
-                      {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "fn",
-                               "type": "custom",
-                               "params": [
-                                  {
-                                     "type": "variable",
-                                     "value": "p1"
-                                  },
-                                  {
-                                     "type": "variable",
-                                     "value": "p2"
-                                  }
-                               ],
-                               "input": {
-                                  "stdin": true
-                               }
-                            }
-                         ]
+                         "type": "variable",
+                         "value": "var"
                       }
                    ]
-                }
-             }
-          ]
+                },
+                null
+             ]
+          }
        }
-   ]
+    ]
 
     const parseOutput = parser.parse(test)
     expect(parseOutput).toStrictEqual(expectedOutput)

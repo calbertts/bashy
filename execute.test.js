@@ -4,22 +4,24 @@ const parser = require('./parser')
 describe("execute", () => {
   test("should parse a simple execute a bashy command", () => {
     const test = 'execute "print $variable"';
-    const expectedOutput = [{
-      "type": "Commands",
-      "commands": [
-         {
-            "command": "execute",
-            "interpreter": {
-               "type": "string",
-               "value": "bashy"
-            },
-            "value": {
-               "type": "string",
-               "value": "print $variable"
-            }
-         }
-      ]
-    }]
+    const expectedOutput = [
+       {
+          "type": "CommandExecution",
+          "commands": [
+             {
+                "command": "execute",
+                "interpreter": {
+                   "type": "string",
+                   "value": "bashy"
+                },
+                "value": {
+                   "type": "string",
+                   "value": "print $variable"
+                }
+             }
+          ]
+       }
+    ]
 
     const parseOutput = parser.parse(test);
     expect(parseOutput).toEqual(expectedOutput);
@@ -29,7 +31,7 @@ describe("execute", () => {
     const test = 'execute `list ${$folder}`';
     const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "execute",
@@ -40,7 +42,10 @@ describe("execute", () => {
                 "value": {
                    "type": "template",
                    "value": [
-                      "list ",
+                      {
+                         "type": "string",
+                         "value": "list "
+                      },
                       {
                          "type": "variable",
                          "value": "folder"
@@ -66,7 +71,7 @@ describe("execute", () => {
 
     const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "execute",
@@ -79,19 +84,29 @@ describe("execute", () => {
                    "value": [
                       {
                          "command": "read",
-                         "file": {
-                            "type": "variable",
-                            "value": "file"
+                         "params": [
+                            {
+                               "type": "variable",
+                               "value": "file"
+                            }
+                         ],
+                         "flags": {},
+                         "input": {
+                            "stdin": true
                          }
                       },
                       {
                          "command": "print",
-                         "value": {
+                         "params": null,
+                         "flags": {},
+                         "input": {
                             "stdin": true
                          }
                       },
                       {
                          "command": "count",
+                         "params": null,
+                         "flags": {},
                          "input": {
                             "stdin": true
                          }
@@ -108,11 +123,11 @@ describe("execute", () => {
   });
 
   it("should parse an execute a nodejs command with an input redirection", () => {
-    const test = `execute -"/usr/local/bin/node" < 'console.log("OK")'`
+    const test = `execute -/usr/local/bin/node < 'console.log("OK")'`
 
     const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "execute",

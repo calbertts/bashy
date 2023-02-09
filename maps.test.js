@@ -4,28 +4,98 @@ const parser = require('./parser')
 describe('maps', () => {
   test('maps declaration', () => {
     const test = 
-      `var = {
-  key1: "value",
-  [
-    print "KEY" > count < read $file
-  ]: print $var,
-  [1]: comma "one"
+      `$obj = {
+  one: 1
+  two: 2.3
+  [$hey]: $template
+  command: (
+    print "comamnd result"
+  )
+  [\`tell me $why\`]: true
+  [(
+    print "TheKey"
+  )]: "wow"
+  aFunctionObj: !myfn
+  [1]: (
+    comma "one"
+  )
 }`
 
     const expectedOutput = [
        {
           "type": "Assignment",
-          "variable": "var",
+          "variable": "obj",
           "value": {
              "type": "Map",
              "value": [
                 {
                    "key": {
-                      "value": "key1"
+                      "value": "one"
                    },
                    "value": {
-                      "type": "string",
-                      "value": "value"
+                      "type": "integer",
+                      "value": 1
+                   }
+                },
+                {
+                   "key": {
+                      "value": "two"
+                   },
+                   "value": {
+                      "type": "decimal",
+                      "value": 2.3
+                   }
+                },
+                {
+                   "key": {
+                      "type": "variable",
+                      "value": "hey"
+                   },
+                   "value": {
+                      "type": "variable",
+                      "value": "template"
+                   }
+                },
+                {
+                   "key": {
+                      "value": "command"
+                   },
+                   "value": {
+                      "type": "command",
+                      "value": [
+                         {
+                            "command": "print",
+                            "params": [
+                               {
+                                  "type": "string",
+                                  "value": "comamnd result"
+                               }
+                            ],
+                            "flags": {},
+                            "input": {
+                               "stdin": true
+                            }
+                         }
+                      ]
+                   }
+                },
+                {
+                   "key": {
+                      "type": "template",
+                      "value": [
+                         {
+                            "type": "string",
+                            "value": "tell me "
+                         },
+                         {
+                            "type": "variable",
+                            "value": "why"
+                         }
+                      ]
+                   },
+                   "value": {
+                      "type": "boolean",
+                      "value": true
                    }
                 },
                 {
@@ -34,39 +104,33 @@ describe('maps', () => {
                       "value": [
                          {
                             "command": "print",
-                            "value": {
-                               "type": "string",
-                               "value": "KEY"
-                            }
-                         },
-                         {
-                            "command": "count",
+                            "params": [
+                               {
+                                  "type": "string",
+                                  "value": "TheKey"
+                               }
+                            ],
+                            "flags": {},
                             "input": {
-                               "type": "command",
-                               "value": [
-                                  {
-                                     "command": "read",
-                                     "file": {
-                                        "type": "variable",
-                                        "value": "file"
-                                     }
-                                  }
-                               ]
+                               "stdin": true
                             }
                          }
                       ]
                    },
                    "value": {
-                      "type": "command",
-                      "value": [
-                         {
-                            "command": "print",
-                            "value": {
-                               "type": "variable",
-                               "value": "var"
-                            }
-                         }
-                      ]
+                      "type": "string",
+                      "value": "wow"
+                   }
+                },
+                {
+                   "key": {
+                      "value": "aFunctionObj"
+                   },
+                   "value": {
+                      "type": "function",
+                      "name": {
+                         "value": "myfn"
+                      }
                    }
                 },
                 {
@@ -79,13 +143,13 @@ describe('maps', () => {
                       "value": [
                          {
                             "command": "comma",
-                            "type": "custom",
                             "params": [
                                {
                                   "type": "string",
                                   "value": "one"
                                }
                             ],
+                            "flags": {},
                             "input": {
                                "stdin": true
                             }

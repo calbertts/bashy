@@ -1,4 +1,5 @@
-execute -node 'console.log("hola")'
+execute -$node 'console.log("hola")'
+execute -bash 'echo $HOME'
 
 fn:
   hello -oh --up-so="OK" -cl -lw "param1" 2 3 4 < (

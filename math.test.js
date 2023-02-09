@@ -4,17 +4,25 @@ const parser = require('./parser')
 describe("math", () => {
   test("should parse math expressions", () => {
     const test = 
-    `var = # 1+3
-print \`Hello: $var, an expression: \${ # $one + $two }, \${ print "command"}\`
+    `$var = # 1+3
+print \`Hello: $var, an expression: \${ # $one + $two }, \${(
+  print "command"
+)}\`
 
 myFunction: param1, param2
-  variable = true
-  v = # 1 + $variable - count < print "OK"
+  $variable = true
+  $v = # 1 + $variable - (
+    count
+  )
   filter $file < (
-    print "OK" > list
+    print "OK"
+    > list
   )
 
-var = myFunction print "ab" "cd" > print`
+$var = (
+  myFunction "ab" "cd"
+  > print
+)`
 
     const expectedOutput = [
        {
@@ -28,9 +36,7 @@ var = myFunction print "ab" "cd" > print`
                    "value": [
                       {
                          "type": "number",
-                         "value": [
-                            "1"
-                         ]
+                         "value": "1"
                       }
                    ]
                 },
@@ -41,9 +47,7 @@ var = myFunction print "ab" "cd" > print`
                       "value": [
                          {
                             "type": "number",
-                            "value": [
-                               "3"
-                            ]
+                            "value": "3"
                          }
                       ]
                    }
@@ -52,71 +56,93 @@ var = myFunction print "ab" "cd" > print`
           }
        },
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "print",
-                "value": {
-                   "type": "template",
-                   "value": [
-                      "Hello: ",
-                      {
-                         "type": "variable",
-                         "value": "var"
-                      },
-                      ", an expression: ",
-                      {
-                         "type": "mathExpression",
-                         "value": [
-                            {
-                               "type": "mathTerm",
-                               "value": [
-                                  {
-                                     "type": "variable",
-                                     "value": "one"
-                                  }
-                               ]
-                            },
-                            {
-                               "op": "+",
-                               "term": {
+                "params": [
+                   {
+                      "type": "template",
+                      "value": [
+                         {
+                            "type": "string",
+                            "value": "Hello: "
+                         },
+                         {
+                            "type": "variable",
+                            "value": "var"
+                         },
+                         {
+                            "type": "string",
+                            "value": ", an expression: "
+                         },
+                         {
+                            "type": "mathExpression",
+                            "value": [
+                               {
                                   "type": "mathTerm",
                                   "value": [
                                      {
                                         "type": "variable",
-                                        "value": "two"
+                                        "value": "one"
                                      }
                                   ]
+                               },
+                               {
+                                  "op": "+",
+                                  "term": {
+                                     "type": "mathTerm",
+                                     "value": [
+                                        {
+                                           "type": "variable",
+                                           "value": "two"
+                                        }
+                                     ]
+                                  }
                                }
-                            }
-                         ]
-                      },
-                      ", ",
-                      {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "command"
+                            ]
+                         },
+                         {
+                            "type": "string",
+                            "value": ", "
+                         },
+                         {
+                            "type": "command",
+                            "value": [
+                               {
+                                  "command": "print",
+                                  "params": [
+                                     {
+                                        "type": "string",
+                                        "value": "command"
+                                     }
+                                  ],
+                                  "flags": {},
+                                  "input": {
+                                     "stdin": true
+                                  }
                                }
-                            }
-                         ]
-                      }
-                   ]
+                            ]
+                         }
+                      ]
+                   }
+                ],
+                "flags": {},
+                "input": {
+                   "stdin": true
                 }
              }
           ]
        },
        {
-          "type": "CustomCommand",
+          "type": "CommandDefinition",
           "head": {
              "name": "myFunction",
              "params": [
                 "param1",
                 "param2"
-             ]
+             ],
+             "flags": {}
           },
           "body": [
              {
@@ -138,9 +164,7 @@ var = myFunction print "ab" "cd" > print`
                          "value": [
                             {
                                "type": "number",
-                               "value": [
-                                  "1"
-                               ]
+                               "value": "1"
                             }
                          ]
                       },
@@ -166,17 +190,10 @@ var = myFunction print "ab" "cd" > print`
                                   "command": [
                                      {
                                         "command": "count",
+                                        "params": null,
+                                        "flags": {},
                                         "input": {
-                                           "type": "command",
-                                           "value": [
-                                              {
-                                                 "command": "print",
-                                                 "value": {
-                                                    "type": "string",
-                                                    "value": "OK"
-                                                 }
-                                              }
-                                           ]
+                                           "stdin": true
                                         }
                                      },
                                      []
@@ -189,27 +206,38 @@ var = myFunction print "ab" "cd" > print`
                 }
              },
              {
-                "type": "Commands",
+                "type": "CommandExecution",
                 "commands": [
                    {
                       "command": "filter",
-                      "token": {
-                         "type": "variable",
-                         "value": "file"
-                      },
+                      "params": [
+                         {
+                            "type": "variable",
+                            "value": "file"
+                         }
+                      ],
+                      "flags": {},
                       "input": {
                          "type": "command",
                          "value": [
                             {
                                "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "OK"
+                               "params": [
+                                  {
+                                     "type": "string",
+                                     "value": "OK"
+                                  }
+                               ],
+                               "flags": {},
+                               "input": {
+                                  "stdin": true
                                }
                             },
                             {
                                "command": "list",
-                               "path": {
+                               "params": null,
+                               "flags": {},
+                               "input": {
                                   "stdin": true
                                }
                             }
@@ -228,32 +256,26 @@ var = myFunction print "ab" "cd" > print`
              "value": [
                 {
                    "command": "myFunction",
-                   "type": "custom",
                    "params": [
                       {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "ab"
-                               }
-                            }
-                         ]
+                         "type": "string",
+                         "value": "ab"
                       },
                       {
                          "type": "string",
                          "value": "cd"
                       }
                    ],
+                   "flags": {},
                    "input": {
                       "stdin": true
                    }
                 },
                 {
                    "command": "print",
-                   "value": {
+                   "params": null,
+                   "flags": {},
+                   "input": {
                       "stdin": true
                    }
                 }

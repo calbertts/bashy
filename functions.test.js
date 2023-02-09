@@ -4,51 +4,319 @@ const parser = require('./parser')
 describe('functions', () => {
   test('function definition', () => {
     const test = 
-    `myFunction: param1, param2
-     variable = true
-     filter $file < (
-       print "OK"
-     )
-     print $variable
+    `hello: name - {upperCase: "-up"}
+  print $name
 
-var = myFunction print "ab" "cd" > print`
+  $template = \`Hello: $var, an expression: \${(
+    print $hey
+    > count < $input
+  )}\`
+
+increment: param1, param2
+  print (
+    print $ONE
+    > count -rw
+    > verify
+  ) $otherParam
+  hello "myname" "other"
+  $wok = 1
+  list
+
+  store $file
+  print 1234
+  read
+  hello "Carlos" < (
+    print $input
+    > count
+  )
+
+  print "end of function"
+increment "hey" "tow"
+`
 
     const expectedOutput = [
        {
-          "type": "CustomCommand",
+          "type": "CommandDefinition",
           "head": {
-             "name": "myFunction",
+             "name": "hello",
              "params": [
-                "param1",
-                "param2"
-             ]
+                "name"
+             ],
+             "flags": {
+                "type": "Map",
+                "value": [
+                   {
+                      "key": {
+                         "value": "upperCase"
+                      },
+                      "value": {
+                         "type": "string",
+                         "value": "-up"
+                      }
+                   }
+                ]
+             }
           },
           "body": [
              {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "print",
+                      "params": [
+                         {
+                            "type": "variable",
+                            "value": "name"
+                         }
+                      ],
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
                 "type": "Assignment",
-                "variable": "variable",
+                "variable": "template",
                 "value": {
-                   "type": "boolean",
-                   "value": true
+                   "type": "template",
+                   "value": [
+                      {
+                         "type": "string",
+                         "value": "Hello: "
+                      },
+                      {
+                         "type": "variable",
+                         "value": "var"
+                      },
+                      {
+                         "type": "string",
+                         "value": ", an expression: "
+                      },
+                      {
+                         "type": "command",
+                         "value": [
+                            {
+                               "command": "print",
+                               "params": [
+                                  {
+                                     "type": "variable",
+                                     "value": "hey"
+                                  }
+                               ],
+                               "flags": {},
+                               "input": {
+                                  "stdin": true
+                               }
+                            },
+                            {
+                               "command": "count",
+                               "params": null,
+                               "flags": {},
+                               "input": {
+                                  "type": "variable",
+                                  "value": "input"
+                               }
+                            }
+                         ]
+                      }
+                   ]
+                }
+             }
+          ]
+       },
+       {
+          "type": "CommandDefinition",
+          "head": {
+             "name": "increment",
+             "params": [
+                "param1",
+                "param2"
+             ],
+             "flags": {}
+          },
+          "body": [
+             {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "print",
+                      "params": [
+                         {
+                            "type": "command",
+                            "value": [
+                               {
+                                  "command": "print",
+                                  "params": [
+                                     {
+                                        "type": "variable",
+                                        "value": "ONE"
+                                     }
+                                  ],
+                                  "flags": {},
+                                  "input": {
+                                     "stdin": true
+                                  }
+                               },
+                               {
+                                  "command": "count",
+                                  "params": null,
+                                  "flags": {
+                                     "rw": true
+                                  },
+                                  "input": {
+                                     "stdin": true
+                                  }
+                               },
+                               {
+                                  "command": "verify",
+                                  "params": null,
+                                  "flags": {},
+                                  "input": {
+                                     "stdin": true
+                                  }
+                               }
+                            ]
+                         },
+                         {
+                            "type": "variable",
+                            "value": "otherParam"
+                         }
+                      ],
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "hello",
+                      "params": [
+                         {
+                            "type": "string",
+                            "value": "myname"
+                         },
+                         {
+                            "type": "string",
+                            "value": "other"
+                         }
+                      ],
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
+                "type": "Assignment",
+                "variable": "wok",
+                "value": {
+                   "type": "integer",
+                   "value": 1
                 }
              },
              {
-                "type": "Commands",
+                "type": "CommandExecution",
                 "commands": [
                    {
-                      "command": "filter",
-                      "token": {
-                         "type": "variable",
-                         "value": "file"
-                      },
+                      "command": "list",
+                      "params": null,
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "store",
+                      "params": [
+                         {
+                            "type": "variable",
+                            "value": "file"
+                         }
+                      ],
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "print",
+                      "params": [
+                         {
+                            "type": "integer",
+                            "value": 1234
+                         }
+                      ],
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "read",
+                      "params": null,
+                      "flags": {},
+                      "input": {
+                         "stdin": true
+                      }
+                   }
+                ]
+             },
+             {
+                "type": "CommandExecution",
+                "commands": [
+                   {
+                      "command": "hello",
+                      "params": [
+                         {
+                            "type": "string",
+                            "value": "Carlos"
+                         }
+                      ],
+                      "flags": {},
                       "input": {
                          "type": "command",
                          "value": [
                             {
                                "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "OK"
+                               "params": [
+                                  {
+                                     "type": "variable",
+                                     "value": "input"
+                                  }
+                               ],
+                               "flags": {},
+                               "input": {
+                                  "stdin": true
+                               }
+                            },
+                            {
+                               "command": "count",
+                               "params": null,
+                               "flags": {},
+                               "input": {
+                                  "stdin": true
                                }
                             }
                          ]
@@ -57,13 +325,19 @@ var = myFunction print "ab" "cd" > print`
                 ]
              },
              {
-                "type": "Commands",
+                "type": "CommandExecution",
                 "commands": [
                    {
                       "command": "print",
-                      "value": {
-                         "type": "variable",
-                         "value": "variable"
+                      "params": [
+                         {
+                            "type": "string",
+                            "value": "end of function"
+                         }
+                      ],
+                      "flags": {},
+                      "input": {
+                         "stdin": true
                       }
                    }
                 ]
@@ -71,44 +345,26 @@ var = myFunction print "ab" "cd" > print`
           ]
        },
        {
-          "type": "Assignment",
-          "variable": "var",
-          "value": {
-             "type": "command",
-             "value": [
-                {
-                   "command": "myFunction",
-                   "type": "custom",
-                   "params": [
-                      {
-                         "type": "command",
-                         "value": [
-                            {
-                               "command": "print",
-                               "value": {
-                                  "type": "string",
-                                  "value": "ab"
-                               }
-                            }
-                         ]
-                      },
-                      {
-                         "type": "string",
-                         "value": "cd"
-                      }
-                   ],
-                   "input": {
-                      "stdin": true
+          "type": "CommandExecution",
+          "commands": [
+             {
+                "command": "increment",
+                "params": [
+                   {
+                      "type": "string",
+                      "value": "hey"
+                   },
+                   {
+                      "type": "string",
+                      "value": "tow"
                    }
-                },
-                {
-                   "command": "print",
-                   "value": {
-                      "stdin": true
-                   }
+                ],
+                "flags": {},
+                "input": {
+                   "stdin": true
                 }
-             ]
-          }
+             }
+          ]
        }
     ]
 

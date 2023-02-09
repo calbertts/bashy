@@ -1,24 +1,60 @@
 const {describe, expect, test} = require('@jest/globals')
 const parser = require('./parser')
 
-describe('print', () => {
+describe('command', () => {
   test('print string', () => {
     const test = `print "Hello World"`
 
      const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "print",
-                "value": {
-                   "type": "string",
-                   "value": "Hello World"
+                "params": [
+                   {
+                      "type": "string",
+                      "value": "Hello World"
+                   }
+                ],
+                "flags": {},
+                "input": {
+                   "stdin": true
                 }
              }
           ]
        }
-     ]
+    ]
+
+    const parseOutput = parser.parse(test)
+    expect(parseOutput).toStrictEqual(expectedOutput)
+  })
+
+  test('print with flags', () => {
+    const test = `print -s "Hello World"`
+
+     const expectedOutput = [
+       {
+          "type": "CommandExecution",
+          "commands": [
+             {
+                "command": "print",
+                "params": [
+                   {
+                      "type": "string",
+                      "value": "Hello World"
+                   }
+                ],
+                "flags": {
+                   "s": true
+                },
+                "input": {
+                   "stdin": true
+                }
+             }
+          ]
+       }
+    ]
 
     const parseOutput = parser.parse(test)
     expect(parseOutput).toStrictEqual(expectedOutput)
@@ -29,18 +65,24 @@ describe('print', () => {
 
      const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "print",
-                "value": {
-                   "type": "integer",
-                   "value": 123
+                "params": [
+                   {
+                      "type": "integer",
+                      "value": 123
+                   }
+                ],
+                "flags": {},
+                "input": {
+                   "stdin": true
                 }
              }
           ]
        }
-     ]
+    ]
 
     const parseOutput = parser.parse(test)
     expect(parseOutput).toStrictEqual(expectedOutput)
@@ -51,48 +93,69 @@ describe('print', () => {
 
      const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "print",
-                "value": {
-                   "type": "variable",
-                   "value": "myValue"
+                "params": [
+                   {
+                      "type": "variable",
+                      "value": "myValue"
+                   }
+                ],
+                "flags": {},
+                "input": {
+                   "stdin": true
                 }
              }
           ]
        }
-     ]
+    ]
 
     const parseOutput = parser.parse(test)
     expect(parseOutput).toStrictEqual(expectedOutput)
   })
 
   test('print single command', () => {
-    const test = `print read $file`
+    const test = 
+    `print (
+      read $file
+    )`
 
      const expectedOutput = [
        {
-          "type": "Commands",
+          "type": "CommandExecution",
           "commands": [
              {
                 "command": "print",
-                "value": {
-                   "type": "command",
-                   "value": [
-                      {
-                         "command": "read",
-                         "file": {
-                            "type": "variable",
-                            "value": "file"
+                "params": [
+                   {
+                      "type": "command",
+                      "value": [
+                         {
+                            "command": "read",
+                            "params": [
+                               {
+                                  "type": "variable",
+                                  "value": "file"
+                               }
+                            ],
+                            "flags": {},
+                            "input": {
+                               "stdin": true
+                            }
                          }
-                      }
-                   ]
+                      ]
+                   }
+                ],
+                "flags": {},
+                "input": {
+                   "stdin": true
                 }
              }
           ]
        }
-     ]
+    ]
 
     const parseOutput = parser.parse(test)
     expect(parseOutput).toStrictEqual(expectedOutput)
@@ -100,28 +163,37 @@ describe('print', () => {
 
   describe('print piped commands', () => {
     test('print simple piped command', () => {
-      const test = `print > read $file`
+      const test = `print
+        > read $file`
 
        const expectedOutput = [
          {
-            "type": "Commands",
+            "type": "CommandExecution",
             "commands": [
                {
                   "command": "print",
-                  "value":  {
+                  "params": null,
+                  "flags": {},
+                  "input": {
                      "stdin": true
                   }
                },
                {
                   "command": "read",
-                  "file": {
-                     "type": "variable",
-                     "value": "file"
+                  "params": [
+                     {
+                        "type": "variable",
+                        "value": "file"
+                     }
+                  ],
+                  "flags": {},
+                  "input": {
+                     "stdin": true
                   }
                }
             ]
          }
-       ]
+      ]
 
       const parseOutput = parser.parse(test)
       expect(parseOutput).toStrictEqual(expectedOutput)
@@ -136,30 +208,40 @@ describe('print', () => {
 
        const expectedOutput = [
          {
-            "type": "Commands",
+            "type": "CommandExecution",
             "commands": [
                {
                   "command": "print",
-                  "value":  {
+                  "params": null,
+                  "flags": {},
+                  "input": {
                      "stdin": true
                   }
                },
                {
                   "command": "read",
-                  "file": {
-                     "type": "variable",
-                     "value": "file"
-                  }
-               },
-               {
-                  "command": "count",
+                  "params": [
+                     {
+                        "type": "variable",
+                        "value": "file"
+                     }
+                  ],
+                  "flags": {},
                   "input": {
                      "stdin": true
                   }
                },
+               {
+                  "command": "count",
+                  "params": null,
+                  "flags": {},
+                  "input": {
+                     "stdin": true
+                  }
+               }
             ]
          }
-       ]
+      ]
 
       const parseOutput = parser.parse(test)
       expect(parseOutput).toStrictEqual(expectedOutput)
@@ -171,108 +253,160 @@ describe('print', () => {
            read $file
              > count
              > print
-         ) > count`
+         )
+         > count`
 
        const expectedOutput = [
          {
-            "type": "Commands",
+            "type": "CommandExecution",
             "commands": [
-                {
-                    "command": "print",
-                    "value": {
+               {
+                  "command": "print",
+                  "params": [
+                     {
                         "type": "command",
                         "value": [
-                            {
-                                "command": "read",
-                                "file": {
+                           {
+                              "command": "read",
+                              "params": [
+                                 {
                                     "type": "variable",
                                     "value": "file"
-                                }
-                            },
-                            {
-                                "command": "count",
-                                "input": {
-                                    "stdin": true
-                                }
-                            },
-                            {
-                               "command": "print",
-                               "value": {
-                                  "stdin": true
-                               }
-                            }
+                                 }
+                              ],
+                              "flags": {},
+                              "input": {
+                                 "stdin": true
+                              }
+                           },
+                           {
+                              "command": "count",
+                              "params": null,
+                              "flags": {},
+                              "input": {
+                                 "stdin": true
+                              }
+                           },
+                           {
+                              "command": "print",
+                              "params": null,
+                              "flags": {},
+                              "input": {
+                                 "stdin": true
+                              }
+                           }
                         ]
-                    }
-                },
-                {
-                    "command": "count",
-                    "input": {
-                        "stdin": true
-                    }
-                }
+                     }
+                  ],
+                  "flags": {},
+                  "input": {
+                     "stdin": true
+                  }
+               },
+               {
+                  "command": "count",
+                  "params": null,
+                  "flags": {},
+                  "input": {
+                     "stdin": true
+                  }
+               }
             ]
          }
-       ]
+      ]
 
       const parseOutput = parser.parse(test)
       expect(parseOutput).toStrictEqual(expectedOutput)
     })
 
     test('print multiple nested piped commands', () => {
-      const test = `print (read (read "file.pdf" > print) > count) > store "myfile"`
+      const test = `print (
+        read (
+          read "file.pdf" 
+          > print
+        )
+        > count
+      )
+      > store "myfile"
+      `
 
        const expectedOutput = [
          {
-            "type": "Commands",
+            "type": "CommandExecution",
             "commands": [
-                {
-                    "command": "print",
-                    "value": {
+               {
+                  "command": "print",
+                  "params": [
+                     {
                         "type": "command",
                         "value": [
-                            {
-                                "command": "read",
-                                "file": {
+                           {
+                              "command": "read",
+                              "params": [
+                                 {
                                     "type": "command",
                                     "value": [
-                                        {
-                                            "command": "read",
-                                            "file": {
+                                       {
+                                          "command": "read",
+                                          "params": [
+                                             {
                                                 "type": "string",
                                                 "value": "file.pdf"
-                                            }
-                                        },
-                                        {
-                                            "command": "print",
-                                            "value": {
-                                                "stdin": true
-                                            }
-                                        }
+                                             }
+                                          ],
+                                          "flags": {},
+                                          "input": {
+                                             "stdin": true
+                                          }
+                                       },
+                                       {
+                                          "command": "print",
+                                          "params": null,
+                                          "flags": {},
+                                          "input": {
+                                             "stdin": true
+                                          }
+                                       }
                                     ]
-                                }
-                            },
-                            {
-                                "command": "count",
-                                "input": {
-                                    "stdin": true
-                                }
-                            }
+                                 }
+                              ],
+                              "flags": {},
+                              "input": {
+                                 "stdin": true
+                              }
+                           },
+                           {
+                              "command": "count",
+                              "params": null,
+                              "flags": {},
+                              "input": {
+                                 "stdin": true
+                              }
+                           }
                         ]
-                    }
-                },
-                {
-                    "command": "store",
-                    "filename": {
+                     }
+                  ],
+                  "flags": {},
+                  "input": {
+                     "stdin": true
+                  }
+               },
+               {
+                  "command": "store",
+                  "params": [
+                     {
                         "type": "string",
                         "value": "myfile"
-                    },
-                    "input": {
-                        "stdin": true
-                    }
-                }
+                     }
+                  ],
+                  "flags": {},
+                  "input": {
+                     "stdin": true
+                  }
+               }
             ]
          }
-       ]
+      ]
 
       const parseOutput = parser.parse(test)
       expect(parseOutput).toStrictEqual(expectedOutput)
@@ -281,22 +415,32 @@ describe('print', () => {
 
   describe('print from input', () => {
     test('print single command', () => {
-      const test = `print < read $file`
+      const test = `print < (
+  read $file
+)`
 
        const expectedOutput = [
          {
-            "type": "Commands",
+            "type": "CommandExecution",
             "commands": [
                {
                   "command": "print",
-                  "value": {
+                  "params": null,
+                  "flags": {},
+                  "input": {
                      "type": "command",
                      "value": [
                         {
                            "command": "read",
-                           "file": {
-                              "type": "variable",
-                              "value": "file"
+                           "params": [
+                              {
+                                 "type": "variable",
+                                 "value": "file"
+                              }
+                           ],
+                           "flags": {},
+                           "input": {
+                              "stdin": true
                            }
                         }
                      ]
@@ -304,7 +448,7 @@ describe('print', () => {
                }
             ]
          }
-       ]
+      ]
 
       const parseOutput = parser.parse(test)
       expect(parseOutput).toStrictEqual(expectedOutput)
@@ -313,41 +457,55 @@ describe('print', () => {
     test('print piped command', () => {
       const test = 
         `print < (
-           read (
-             print "filename"
-           ) > sort
-         )`
+          read (
+            print "filename"
+          )
+          > sort
+        )
+      `
 
        const expectedOutput = [
          {
-            "type": "Commands",
+            "type": "CommandExecution",
             "commands": [
                {
                   "command": "print",
-                  "value": {
+                  "params": null,
+                  "flags": {},
+                  "input": {
                      "type": "command",
                      "value": [
                         {
                            "command": "read",
-                           "file": {
-                              "type": "command",
-                              "value": [
-                                 {
-                                    "command": "print",
-                                    "value": {
-                                       "type": "string",
-                                       "value": "filename"
+                           "params": [
+                              {
+                                 "type": "command",
+                                 "value": [
+                                    {
+                                       "command": "print",
+                                       "params": [
+                                          {
+                                             "type": "string",
+                                             "value": "filename"
+                                          }
+                                       ],
+                                       "flags": {},
+                                       "input": {
+                                          "stdin": true
+                                       }
                                     }
-                                 }
-                              ]
+                                 ]
+                              }
+                           ],
+                           "flags": {},
+                           "input": {
+                              "stdin": true
                            }
                         },
                         {
                            "command": "sort",
-                           "opt": {
-                             "type": "string",
-                             "value": "asc"
-                           },
+                           "params": null,
+                           "flags": {},
                            "input": {
                               "stdin": true
                            }
