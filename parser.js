@@ -624,10 +624,19 @@ module.exports = /*
         peg$c289 = peg$otherExpectation("map item"),
         peg$c290 = function(key, value) {
             return {
+              key: {
+                type: "string",
+                value: key.value
+              },
+              value
+            }
+          },
+        peg$c291 = function(key, value) {
+            return {
               key, value
             }
           },
-        peg$c291 = peg$otherExpectation("map value"),
+        peg$c292 = peg$otherExpectation("map value"),
 
         peg$currPos          = 0,
         peg$savedPos         = 0,
@@ -6163,7 +6172,7 @@ module.exports = /*
                           s10 = peg$parse__();
                           if (s10 !== peg$FAILED) {
                             peg$savedPos = s0;
-                            s1 = peg$c290(s3, s8);
+                            s1 = peg$c291(s3, s8);
                             s0 = s1;
                           } else {
                             peg$currPos = s0;
@@ -6223,7 +6232,7 @@ module.exports = /*
       peg$silentFails--;
       if (s0 === peg$FAILED) {
         s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c291); }
+        if (peg$silentFails === 0) { peg$fail(peg$c292); }
       }
 
       return s0;

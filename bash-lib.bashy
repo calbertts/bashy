@@ -7,7 +7,7 @@ pwd:
   ~$ --interpreter=$interpreter "pwd"
 
 list: directory
-  print $__flags
+  print $__flags["silent"]
   ~$ --interpreter=$interpreter `ls $directory`
 
 read: file

@@ -15,7 +15,19 @@ allTest:
   print "-----"
   list "~"
 
-list --silent "."
+testObj:
+  $obj = {
+    zero: 0
+    one: 1
+    [$name]: "123"
+  }
+  print $obj["one"]
 
-read "~/ISSUE_TEMPLATE/Bug-Report.md"
+  $obj["one"] = 2
+
+  print $obj["one"]
+
+  print $obj["global thing"]
+
+testObj
 

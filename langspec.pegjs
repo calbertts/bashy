@@ -578,7 +578,11 @@ Map "map" =
 MapItem "map item" =
   key:Variable ":" __ value:MapValue ","? __ {
     return {
-      key, value
+      key: {
+        type: "string",
+        value: key.value
+      },
+      value
     }
   }
   / "[" __ key:MapValue __ "]" ":" __ value:MapValue ","? __ {

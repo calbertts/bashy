@@ -24,7 +24,6 @@ function interpret(ast, scope) {
 
 function interpretPipedCommand(commands, scope) {
   let result = null;
-  console.log('LISTCMD:', commands.length)
   for (const _command of commands) {
     const { command, type, ...input } = _command;
     result = interpretSingleCommand(command, type, input, result, scope);
@@ -105,12 +104,21 @@ function interpretValue(ast, scope) {
     switch (ast.type) {
       case 'variable':
         return (scope && scope[ast.value]) || global[ast.value];
+      case 'propertyValue':
+        return (scope && scope[ast.variable][interpretValue(ast.value, scope)]) || 
+          global[ast.variable][interpretValue(ast.value, scope)];
       case 'number':
       case 'string':
       case 'decimal':
       case 'integer':
       case 'boolean':
         return ast.value;
+      case 'Map':
+        const map= ast.value.reduce((acc, cur) => {
+          acc[interpretValue(cur.key, scope)] = interpretValue(cur.value, scope)
+          return acc;
+        }, {});
+        return map
       case 'template':
         return ast.value.map(item => {
           return interpretValue(item, scope)
@@ -128,11 +136,22 @@ function interpretAssignment(assignment, scope) {
   // Interpret the value of the assignment
   const interpretedValue = interpretValue(value, scope);
 
-  // Assign the interpreted value to the variable
-  if (scope)
-    scope[variable] = interpretedValue;
-  else
-    global[variable] = interpretedValue;
+  const variableName = variable.variable;
+
+  if (variable.type === "new") {
+    if (scope) {
+      scope[variableName] = interpretedValue;
+    } else {
+      global[variableName] = interpretedValue;
+    }
+  }
+  else if (variable.type === "property") {
+    if (scope) {
+      scope[variableName][interpretValue(variable.property)] = interpretedValue;
+    } else {
+      global[variableName][interpretValue(variable.property)] = interpretedValue;
+    }
+  }
 }
 
 function interpretPrint(command, input, stdin, scope) {
