@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { exec, spawn } = require('node:child_process');
+const { execSync } = require('node:child_process');
 const parser = require('./parser')
 
 function interpret(ast, scope) {
@@ -24,6 +24,7 @@ function interpret(ast, scope) {
 
 function interpretPipedCommand(commands, scope) {
   let result = null;
+  console.log('LISTCMD:', commands.length)
   for (const _command of commands) {
     const { command, type, ...input } = _command;
     result = interpretSingleCommand(command, type, input, result, scope);
@@ -50,7 +51,13 @@ function interpretSingleCommand(command, type, input, stdin, scope) {
     global[command].params[key] = paramsValues[index];
   });
 
+  global[command].flags = input.flags;
+  Object.keys(global[command].flags).forEach((key, index) => {
+    global[command].flags[key] = interpretValue(global[command].flags[key], scope);
+  });
+
   global[command].params["__stdin"] = stdin;
+  global[command].params["__flags"] = global[command].flags;
 
   const fn = global[command].fn;
   const fnResult = fn(global[command].params);
@@ -169,14 +176,19 @@ function interpretCount(command, input, stdin) {
 
 function interpretExecute(command, input, stdin, scope) {
   const code = interpretValue(input.value, scope);
+  const interpreter = interpretValue(input.flags.interpreter);
+  const silent = interpretValue(input.flags.silent);
   // console.log('code:', code);
-  exec(code, (err, stdout, stderr) => {
-    if (err) {
-      console.error(stderr);
-      return;
-    }
-    console.log(stdout.trim());
-  });
+  try {
+    const stdout = execSync(code).toString().trim();
+
+    if (!silent)
+      console.log(stdout);
+
+    return stdout;
+  } catch(stderr) {
+    console.error(stderr);
+  }
   // return interpretPipedCommand(command.value);
 }
 

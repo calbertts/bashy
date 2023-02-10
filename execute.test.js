@@ -3,16 +3,18 @@ const parser = require('./parser')
 
 describe("execute", () => {
   test("should parse a simple execute a bashy command", () => {
-    const test = 'execute "print $variable"';
+    const test = '~$ --interpreter="bashy" "print $variable"';
     const expectedOutput = [
        {
           "type": "CommandExecution",
           "commands": [
              {
                 "command": "execute",
-                "interpreter": {
-                   "type": "string",
-                   "value": "bashy"
+                "flags": {
+                   "interpreter": {
+                      "type": "string",
+                      "value": "bashy"
+                   }
                 },
                 "value": {
                    "type": "string",
@@ -28,16 +30,18 @@ describe("execute", () => {
   });
 
   it("should parse an execute a bashy command with a variable value", () => {
-    const test = 'execute `list ${$folder}`';
+    const test = '~$ --interpreter="bashy" `list ${$folder}`';
     const expectedOutput = [
        {
           "type": "CommandExecution",
           "commands": [
              {
                 "command": "execute",
-                "interpreter": {
-                   "type": "string",
-                   "value": "bashy"
+                "flags": {
+                   "interpreter": {
+                      "type": "string",
+                      "value": "bashy"
+                   }
                 },
                 "value": {
                    "type": "template",
@@ -63,7 +67,7 @@ describe("execute", () => {
 
   it("should parse an execute a bash command with an input redirection", () => {
     const test = 
-      `execute -bash < (
+      `~$ --interpreter="bash" < (
         read $file
           > print
           > count
@@ -75,9 +79,11 @@ describe("execute", () => {
           "commands": [
              {
                 "command": "execute",
-                "interpreter": {
-                   "type": "string",
-                   "value": "bash"
+                "flags": {
+                   "interpreter": {
+                      "type": "string",
+                      "value": "bash"
+                   }
                 },
                 "value": {
                    "type": "command",
@@ -123,7 +129,7 @@ describe("execute", () => {
   });
 
   it("should parse an execute a nodejs command with an input redirection", () => {
-    const test = `execute -/usr/local/bin/node < 'console.log("OK")'`
+    const test = `~$ --interpreter="/usr/local/bin/node" < 'console.log("OK")'`
 
     const expectedOutput = [
        {
@@ -131,9 +137,11 @@ describe("execute", () => {
           "commands": [
              {
                 "command": "execute",
-                "interpreter": {
-                   "type": "string",
-                   "value": "/usr/local/bin/node"
+                "flags": {
+                   "interpreter": {
+                      "type": "string",
+                      "value": "/usr/local/bin/node"
+                   }
                 },
                 "value": {
                    "type": "string",

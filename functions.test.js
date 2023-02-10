@@ -78,7 +78,10 @@ increment "hey" "tow"
              },
              {
                 "type": "Assignment",
-                "variable": "template",
+                "variable": {
+                   "type": "new",
+                   "variable": "template"
+                },
                 "value": {
                    "type": "template",
                    "value": [
@@ -215,7 +218,10 @@ increment "hey" "tow"
              },
              {
                 "type": "Assignment",
-                "variable": "wok",
+                "variable": {
+                   "type": "new",
+                   "variable": "wok"
+                },
                 "value": {
                    "type": "integer",
                    "value": 1

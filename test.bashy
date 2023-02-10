@@ -15,7 +15,7 @@ allTest:
   print "-----"
   list "~"
 
-list "."
-> filter ".bashy"
+list --silent "."
 
 read "~/ISSUE_TEMPLATE/Bug-Report.md"
+

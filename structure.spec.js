@@ -4,7 +4,7 @@ const parser = require('./parser')
 describe('structure', () => {
   test('test all structure', () => {
     const test =
-    `execute -$node 'console.log("hola")'
+    `execute -node 'console.log("hola")'
 execute -bash 'echo $HOME'
 
 fn:
@@ -43,6 +43,11 @@ $obj = {
   )]: "wow"
   aFunctionObj: !myfn
 }
+$obj = {
+  prop: "hey"
+}
+$obj['prop'] = "Hello World!"
+$obj['prop1'] = $obj['one']
 
 $commandResult = (
   print "OK" < (
@@ -133,13 +138,17 @@ otherFunc: p1
           "commands": [
              {
                 "command": "execute",
-                "interpreter": {
-                   "type": "variable",
-                   "value": "node"
+                "params": [
+                   {
+                      "type": "string",
+                      "value": "console.log(\"hola\")"
+                   }
+                ],
+                "flags": {
+                   "node": true
                 },
-                "value": {
-                   "type": "string",
-                   "value": "console.log(\"hola\")"
+                "input": {
+                   "stdin": true
                 }
              }
           ]
@@ -149,13 +158,17 @@ otherFunc: p1
           "commands": [
              {
                 "command": "execute",
-                "interpreter": {
-                   "type": "string",
-                   "value": "bash"
+                "params": [
+                   {
+                      "type": "string",
+                      "value": "echo $HOME"
+                   }
+                ],
+                "flags": {
+                   "bash": true
                 },
-                "value": {
-                   "type": "string",
-                   "value": "echo $HOME"
+                "input": {
+                   "stdin": true
                 }
              }
           ]
@@ -245,7 +258,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "simple",
+          "variable": {
+             "type": "new",
+             "variable": "simple"
+          },
           "value": {
              "type": "string",
              "value": "Simple Comma"
@@ -253,7 +269,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "double",
+          "variable": {
+             "type": "new",
+             "variable": "double"
+          },
           "value": {
              "type": "string",
              "value": "Double Comma"
@@ -261,7 +280,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "result",
+          "variable": {
+             "type": "new",
+             "variable": "result"
+          },
           "value": {
              "type": "decimal",
              "value": 1.456
@@ -269,7 +291,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "brith",
+          "variable": {
+             "type": "new",
+             "variable": "brith"
+          },
           "value": {
              "type": "integer",
              "value": 1987
@@ -277,7 +302,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "underAge",
+          "variable": {
+             "type": "new",
+             "variable": "underAge"
+          },
           "value": {
              "type": "boolean",
              "value": false
@@ -285,7 +313,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "math",
+          "variable": {
+             "type": "new",
+             "variable": "math"
+          },
           "value": {
              "type": "mathExpression",
              "value": [
@@ -331,7 +362,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "emptyArrayVar",
+          "variable": {
+             "type": "new",
+             "variable": "emptyArrayVar"
+          },
           "value": {
              "type": "List",
              "value": []
@@ -339,7 +373,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "arrayVar",
+          "variable": {
+             "type": "new",
+             "variable": "arrayVar"
+          },
           "value": {
              "type": "List",
              "value": [
@@ -395,7 +432,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "emptyObj",
+          "variable": {
+             "type": "new",
+             "variable": "emptyObj"
+          },
           "value": {
              "type": "Map",
              "value": []
@@ -403,7 +443,10 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "obj",
+          "variable": {
+             "type": "new",
+             "variable": "obj"
+          },
           "value": {
              "type": "Map",
              "value": [
@@ -517,7 +560,65 @@ otherFunc: p1
        },
        {
           "type": "Assignment",
-          "variable": "commandResult",
+          "variable": {
+             "type": "new",
+             "variable": "obj"
+          },
+          "value": {
+             "type": "Map",
+             "value": [
+                {
+                   "key": {
+                      "value": "prop"
+                   },
+                   "value": {
+                      "type": "string",
+                      "value": "hey"
+                   }
+                }
+             ]
+          }
+       },
+       {
+          "type": "Assignment",
+          "variable": {
+             "type": "property",
+             "variable": "obj",
+             "property": {
+                "type": "string",
+                "value": "prop"
+             }
+          },
+          "value": {
+             "type": "string",
+             "value": "Hello World!"
+          }
+       },
+       {
+          "type": "Assignment",
+          "variable": {
+             "type": "property",
+             "variable": "obj",
+             "property": {
+                "type": "string",
+                "value": "prop1"
+             }
+          },
+          "value": {
+             "type": "propertyValue",
+             "variable": "obj",
+             "value": {
+                "type": "string",
+                "value": "one"
+             }
+          }
+       },
+       {
+          "type": "Assignment",
+          "variable": {
+             "type": "new",
+             "variable": "commandResult"
+          },
           "value": {
              "type": "command",
              "value": [
@@ -611,7 +712,10 @@ otherFunc: p1
              },
              {
                 "type": "Assignment",
-                "variable": "template",
+                "variable": {
+                   "type": "new",
+                   "variable": "template"
+                },
                 "value": {
                    "type": "template",
                    "value": [
@@ -748,7 +852,10 @@ otherFunc: p1
              },
              {
                 "type": "Assignment",
-                "variable": "wok",
+                "variable": {
+                   "type": "new",
+                   "variable": "wok"
+                },
                 "value": {
                    "type": "integer",
                    "value": 1
@@ -1224,7 +1331,10 @@ otherFunc: p1
              },
              {
                 "type": "Assignment",
-                "variable": "returnValue",
+                "variable": {
+                   "type": "new",
+                   "variable": "returnValue"
+                },
                 "value": {
                    "type": "string",
                    "value": "valor"

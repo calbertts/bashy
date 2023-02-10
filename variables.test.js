@@ -8,7 +8,10 @@ describe("variables", () => {
     const expected = [
        {
           "type": "Assignment",
-          "variable": "string",
+          "variable": {
+             "type": "new",
+             "variable": "string"
+          },
           "value": {
              "type": "string",
              "value": "Hello World!"
@@ -36,13 +39,39 @@ describe("variables", () => {
     expect(result).toEqual(expected)
   })
 
+  test("assign to a property variable", () => {
+    const test = `\$obj['prop'] = "Hello World!"`
+    const result = parser.parse(test)
+        const expected = [
+       {
+          "type": "Assignment",
+          "variable": {
+             "type": "property",
+             "variable": "obj",
+             "property": {
+                "type": "string",
+                "value": "prop"
+             }
+          },
+          "value": {
+             "type": "string",
+             "value": "Hello World!"
+          }
+       }
+    ]
+    expect(result).toEqual(expected)
+  })
+
   test("assign integer value", () => {
     const test = '$int = 123\nprint $int'
     const result = parser.parse(test)
     const expected = [
        {
           "type": "Assignment",
-          "variable": "int",
+          "variable": {
+             "type": "new",
+             "variable": "int"
+          },
           "value": {
              "type": "integer",
              "value": 123
@@ -76,7 +105,10 @@ describe("variables", () => {
     const expected = [
        {
           "type": "Assignment",
-          "variable": "dec",
+          "variable": {
+             "type": "new",
+             "variable": "dec"
+          },
           "value": {
              "type": "decimal",
              "value": 123.456
@@ -110,7 +142,10 @@ describe("variables", () => {
     const expected = [
        {
           "type": "Assignment",
-          "variable": "bool",
+          "variable": {
+             "type": "new",
+             "variable": "bool"
+          },
           "value": {
              "type": "boolean",
              "value": true
@@ -133,7 +168,10 @@ describe("variables", () => {
     const expected = [
        {
           "type": "Assignment",
-          "variable": "commandResult",
+          "variable": {
+             "type": "new",
+             "variable": "commandResult"
+          },
           "value": {
              "type": "command",
              "value": [

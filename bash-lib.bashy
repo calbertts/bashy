@@ -1,14 +1,17 @@
+$interpreter = "bash"
+
 print: name
-  ~$ -bash `echo $name`
+  ~$ --interpreter=$interpreter `echo $name`
 
 pwd:
-  ~$ -bash "pwd"
+  ~$ --interpreter=$interpreter "pwd"
 
 list: directory
-  ~$ -bash `ls $directory`
+  print $__flags
+  ~$ --interpreter=$interpreter `ls $directory`
 
 read: file
-  ~$ -bash `cat $file`
+  ~$ --interpreter=$interpreter `cat $file`
 
 filter: pattern
-  ~$ -bash `echo $__stdin | grep $pattern`
+  ~$ --interpreter=$interpreter `echo $__stdin | grep $pattern`

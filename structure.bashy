@@ -37,6 +37,11 @@ $obj = {
   )]: "wow"
   aFunctionObj: !myfn
 }
+$obj = {
+  prop: "hey"
+}
+$obj['prop'] = "Hello World!"
+$obj['prop1'] = $obj['one']
 
 $commandResult = (
   print "OK" < (

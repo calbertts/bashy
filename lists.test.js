@@ -26,7 +26,10 @@ $arrayVar = [
     const expectedOutput = [
        {
           "type": "Assignment",
-          "variable": "arrayVar",
+          "variable": {
+             "type": "new",
+             "variable": "arrayVar"
+          },
           "value": {
              "type": "List",
              "value": [

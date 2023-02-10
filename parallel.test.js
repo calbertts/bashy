@@ -377,7 +377,10 @@ otherFunc: p1
              },
              {
                 "type": "Assignment",
-                "variable": "returnValue",
+                "variable": {
+                   "type": "new",
+                   "variable": "returnValue"
+                },
                 "value": {
                    "type": "string",
                    "value": "valor"

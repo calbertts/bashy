@@ -27,7 +27,10 @@ $var = (
     const expectedOutput = [
        {
           "type": "Assignment",
-          "variable": "var",
+          "variable": {
+             "type": "new",
+             "variable": "var"
+          },
           "value": {
              "type": "mathExpression",
              "value": [
@@ -147,7 +150,10 @@ $var = (
           "body": [
              {
                 "type": "Assignment",
-                "variable": "variable",
+                "variable": {
+                   "type": "new",
+                   "variable": "variable"
+                },
                 "value": {
                    "type": "boolean",
                    "value": true
@@ -155,7 +161,10 @@ $var = (
              },
              {
                 "type": "Assignment",
-                "variable": "v",
+                "variable": {
+                   "type": "new",
+                   "variable": "v"
+                },
                 "value": {
                    "type": "mathExpression",
                    "value": [
@@ -250,7 +259,10 @@ $var = (
        },
        {
           "type": "Assignment",
-          "variable": "var",
+          "variable": {
+             "type": "new",
+             "variable": "var"
+          },
           "value": {
              "type": "command",
              "value": [

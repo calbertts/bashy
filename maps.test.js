@@ -24,7 +24,10 @@ describe('maps', () => {
     const expectedOutput = [
        {
           "type": "Assignment",
-          "variable": "obj",
+          "variable": {
+             "type": "new",
+             "variable": "obj"
+          },
           "value": {
              "type": "Map",
              "value": [

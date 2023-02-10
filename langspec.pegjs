@@ -46,8 +46,28 @@ AssigmentVariable =
   {
     return {
       type: "Assignment",
-      variable: variable,
+      variable: {
+        type: "new",
+        variable
+      },
       value
+    }
+  }
+  / __ variable:VariableProperty _ "=" __ value:VariableValue EOS?
+  {
+    return {
+      type: "Assignment",
+      variable,
+      value
+    }
+  }
+  
+VariableProperty "property access" = 
+  variable:VariableSymbol "[" property:VariableValue "]" {
+    return {
+      type: "property",
+      variable,
+      property
     }
   }
 /******************************* SENTENCES END */
@@ -200,6 +220,7 @@ VariableValue "variable value" =
   / boolean:Boolean { return { type: "boolean", value: boolean} }
   / backtickString:BacktickString { return { type: "template", value: backtickString } }
   / string:String { return { type: "string", value: string } }
+  / variableProp:VariablePropertyAccess
   / variable:VariableSymbol { return { type: "variable", value: variable } }
   / mathExpr:MathExpression
   / list:List
@@ -209,6 +230,15 @@ VariableValue "variable value" =
   / "(" __ command:PipedCommand __ ")" {
     const [head, tail] = command
   	return { type: "command", value: [head, ...tail] }
+  }
+  
+VariablePropertyAccess "property access" = 
+  variable:VariableSymbol "[" value:VariableValue "]" {
+    return {
+      type: "propertyValue",
+      variable,
+      value
+    }
   }
   
 FunctionObj "function object" = "!" name:Variable {
@@ -246,8 +276,18 @@ CommandEnd = EOS
 FlagName "flag name" = t:[a-zA-Z_-]+ { return {value: t.join("")} }
 
 Flag "command flag" = 
-  "-"flag:Variable { return {flag, value: true} }
-  / "--"flag:FlagName "="? value:VariableValue? { return {flag, value} }
+  "-"flag:Variable {
+    return {
+      flag,
+      value: true
+    }
+  }
+  / "--"flag:FlagName "="? value:VariableValue? {
+    return {
+      flag,
+      value: value ? value : {type: "boolean", value: !value}
+    }
+  }
 
 Flags "command flags" = flags:(flag:Flag _? {return flag})* {
   return flags.reduce((obj, flag) => {
@@ -279,10 +319,10 @@ Return "return sentence" = command:"return" _ value:VariableValue? {
   }
 
 Execute "execute command" = 
-  command:"~$" _ interpreter:ExecuteOpts? _ value:VariableValue? _ input:CommandInput? {
+  command:"~$" _ flags:Flags? _ value:VariableValue? _ input:CommandInput? {
     return {
-    	command, 
-        interpreter: !interpreter ? { type: "string", value: "bashy" } : interpreter, 
+    	command: "execute", 
+        flags,
         value: !value ? input : value
     }
   }
@@ -291,7 +331,7 @@ EvaluateFile = [a-zA-Z0-9-_\/\.]+ {return text()}
 Evaluate "bashy evaluation" = 
   command:"~~" _ file:EvaluateFile {
     return {
-      type: "eval",
+      command: "eval",
       value: {
         type: "string",
         value: file
