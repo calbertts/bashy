@@ -114,11 +114,14 @@ function interpretValue(ast, scope) {
       case 'boolean':
         return ast.value;
       case 'Map':
-        const map= ast.value.reduce((acc, cur) => {
+        return ast.value.reduce((acc, cur) => {
           acc[interpretValue(cur.key, scope)] = interpretValue(cur.value, scope)
           return acc;
         }, {});
-        return map
+      case 'List':
+        return ast.value.map(item => {
+          return interpretValue(item, scope)
+        });
       case 'template':
         return ast.value.map(item => {
           return interpretValue(item, scope)

@@ -33,6 +33,7 @@ describe('maps', () => {
              "value": [
                 {
                    "key": {
+                      "type": "string",
                       "value": "one"
                    },
                    "value": {
@@ -42,6 +43,7 @@ describe('maps', () => {
                 },
                 {
                    "key": {
+                      "type": "string",
                       "value": "two"
                    },
                    "value": {
@@ -61,6 +63,7 @@ describe('maps', () => {
                 },
                 {
                    "key": {
+                      "type": "string",
                       "value": "command"
                    },
                    "value": {
@@ -127,6 +130,7 @@ describe('maps', () => {
                 },
                 {
                    "key": {
+                      "type": "string",
                       "value": "aFunctionObj"
                    },
                    "value": {

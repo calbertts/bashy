@@ -452,6 +452,7 @@ otherFunc: p1
              "value": [
                 {
                    "key": {
+                      "type": "string",
                       "value": "one"
                    },
                    "value": {
@@ -461,6 +462,7 @@ otherFunc: p1
                 },
                 {
                    "key": {
+                      "type": "string",
                       "value": "two"
                    },
                    "value": {
@@ -480,6 +482,7 @@ otherFunc: p1
                 },
                 {
                    "key": {
+                      "type": "string",
                       "value": "command"
                    },
                    "value": {
@@ -546,6 +549,7 @@ otherFunc: p1
                 },
                 {
                    "key": {
+                      "type": "string",
                       "value": "aFunctionObj"
                    },
                    "value": {
@@ -569,6 +573,7 @@ otherFunc: p1
              "value": [
                 {
                    "key": {
+                      "type": "string",
                       "value": "prop"
                    },
                    "value": {
@@ -681,6 +686,7 @@ otherFunc: p1
                 "value": [
                    {
                       "key": {
+                         "type": "string",
                          "value": "upperCase"
                       },
                       "value": {

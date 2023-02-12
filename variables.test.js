@@ -39,6 +39,66 @@ describe("variables", () => {
     expect(result).toEqual(expected)
   })
 
+  test("assign string template with a variable value", () => {
+    const test = '$string = `Showing a $variable`'
+    const result = parser.parse(test)
+    const expected = [
+       {
+          "type": "Assignment",
+          "variable": {
+             "type": "new",
+             "variable": "string"
+          },
+          "value": {
+             "type": "template",
+             "value": [
+                {
+                   "type": "string",
+                   "value": "Showing a "
+                },
+                {
+                   "type": "variable",
+                   "value": "variable"
+                }
+             ]
+          }
+       }
+    ]
+    expect(result).toEqual(expected)
+  })
+
+  test("assign string template with an object property variable value", () => {
+    const test = '$string = `Showing a $list["length"]`'
+    const result = parser.parse(test)
+    const expected = [
+       {
+          "type": "Assignment",
+          "variable": {
+             "type": "new",
+             "variable": "string"
+          },
+          "value": {
+             "type": "template",
+             "value": [
+                {
+                   "type": "string",
+                   "value": "Showing a "
+                },
+                {
+                   "type": "propertyValue",
+                   "variable": "list",
+                   "value": {
+                      "type": "string",
+                      "value": "length"
+                   }
+                }
+             ]
+          }
+       }
+    ]
+    expect(result).toEqual(expected)
+  })
+
   test("assign to a property variable", () => {
     const test = `\$obj['prop'] = "Hello World!"`
     const result = parser.parse(test)

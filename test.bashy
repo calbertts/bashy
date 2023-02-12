@@ -2,6 +2,9 @@
 
 $name = "global thing"
 
+giveMeName:
+  return "Hello Mr. Carlos"
+
 allTest:
   print `STDIN: $__stdin`
   $helloText = "Hello world"
@@ -21,13 +24,63 @@ testObj:
     one: 1
     [$name]: "123"
   }
+
+  $list = [1, 2, {key: "prop"}]
+  $list[.add] = 1
+  $list[.remove] = !searchItem
+  $list[.search] = !searchItem
+  $list[.concat] = [4,5]
+  $list[.insert] = [4,5]
+
+  add --item=1 $list
+  add --item=1 $list
+
   print $obj["one"]
 
   $obj["one"] = 2
 
   print $obj["one"]
-
   print $obj["global thing"]
+  print `Length: $list["length"]`
 
 testObj
+
+mutiplicarPor2: n
+  $result = # $n * 2
+
+  (true) ? {
+    $result = !myFn
+    callFunction $result
+  }
+  {
+    $result = 123
+  }
+
+  (true) ? {
+    $result = 1
+    callFunction $result
+  }
+  (true or false and $ok) ? {
+    $result = 2
+    ! $result
+  }
+  {
+    $result = 123
+  }
+
+  (true) ? {
+    (false not true) ? {
+      $result = 1
+      callFunction $result
+    }
+  }
+  (true or false and $ok) ? {
+    $result = 2
+    !
+  }
+  {
+    $result = 123
+  }
+
+  $result
 

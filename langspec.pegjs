@@ -1,3 +1,8 @@
+{
+    let prevIndentCount = 0;
+    function print(...s) { console.log(...s); }
+}
+
 Program = Sentences?
 
 Sentences =
@@ -8,12 +13,12 @@ Sentences =
 Sentence = 
   !."\n"
   / Comment
+  / IfExpression
   / CommandDefinition
   / Commands
   / AssigmentVariable
   / Parallel
   / MathExpression
-  / BooleanExpression
   
 CommandSentence = 
   !."\n"
@@ -33,7 +38,7 @@ Comment =
   / SingleLineComment
 
 Commands = 
-  L command:PipedCommand EOS?
+  __ command:PipedCommand EOS?
   {
     return {
       type: "CommandExecution",
@@ -121,8 +126,82 @@ CommandBody "command body" = (Indent L fl:CommandSentence L { return fl })*
 
 
 /******************************* CONDITIONALS */
+Indentx 'indentx'
+    = i:("  "+) { 
+        let currentIndentCount = i.toString().replace(/,/g, "").length;
+        if (currentIndentCount === prevIndentCount + 2) { 
+            // DEBUG //
+            print("=== Indent ===");
+            print("    current:"+currentIndentCount); 
+            print("    previous:"+prevIndentCount);
+            print("    lineNumber:"+location().start.line); 
+            // DEBUG //
+            prevIndentCount += 2;
+            return "[indentx]";
+        }
+        error("error: expected a 2-space indentation here!")
+    } // 2 spaces 
+
+Samedent 'samedent'
+    = s:("  "+ / "") &{
+        let currentIndentCount = s.toString().replace(/,/g, "").length;
+        if (currentIndentCount === prevIndentCount) {
+            print("=== Samedent ===");
+            return true;
+        }
+        return false;
+    }
+
+Dedent 'dedent'
+    = d:("  "+ / "") {
+        let currentIndentCount = d.toString().replace(/,/g, "").length;
+        if (currentIndentCount < prevIndentCount) {
+            // DEBUG //
+            print("=== Dedent ===");
+            print("    current:"+currentIndentCount); 
+            print("    previous:"+prevIndentCount);
+            print("    lineNumber:"+location().start.line); 
+            // DEBUG //
+            prevIndentCount -= 2;
+            return "[dedent]";
+        }
+        error("error: expected a 2-space dedentation here!");
+    }
+
+IfExpression = 
+  __ section:If 
+  __ sections:(L elsif:IfElse {return elsif})* L 
+  __ ifelse:Else? EOS? {
+    return {
+      type: "Conditional",
+      section,
+      sections,
+      ifelse
+    }
+  }
+ 
+If = "[" condition:BooleanExpression "]" _ "?" L
+  L? Indentx? s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
+  __ {
+   return {condition, sentences}
+ }
+
+IfElse = "[" condition:BooleanExpression "]" _ "??" L
+  L? Indentx? s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
+  __ {
+   return {condition, sentences}
+ }
+
+Else = "|" "\n"
+  L? Indentx? s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
+  __ {
+   return {
+     sentences
+   }
+ }
+
 BooleanExpression "boolean expression" =
-  _ "("? __ head:BooleanTerm tail:(_ op:("and" / "or") _ term:BooleanTerm {return {op, term}})* __ ")"? _ "?" __ {
+  head:BooleanTerm tail:(_ op:("and" / "or") _ term:BooleanTerm {return {op, term}})* {
       return {
         type: "BooleanExpression",
         value: [head, ...tail]
@@ -130,7 +209,7 @@ BooleanExpression "boolean expression" =
     }
 
 BooleanTerm "boolean term" = 
-  head:Factor tail:(_ op:("not" / "xor")? _ factor:Factor {return {op, factor}})* {
+  head:BooleanFactor tail:(_ op:("not")? _ factor:BooleanFactor {return {op, factor}})* {
       return {
         type: "BooleanTerm",
         value: [head, ...tail]
@@ -138,10 +217,9 @@ BooleanTerm "boolean term" =
     }
 
 BooleanFactor "boolean factor" = 
-  "(" _ expr:BooleanExpression _ ")" { return expr; }
-  / boolean:Boolean { return { type: "boolean", value: boolean} }
-  / command:PipedCommand { return {type: "command", command} }
-  / __ "(" __ command:PipedCommand __ ")" { return {type: "command", command} }
+  boolean:Boolean { return { type: "boolean", value: boolean} }
+  // expr:BooleanExpression { return expr; }  / command:PipedCommand { return {type: "command", command} }
+  // command:VariableValue { return {type: "command", command} }
   / variable:VariableSymbol { return {type: "variable", value: variable} }
 /******************************* CONDITIONALS END */
 
@@ -412,6 +490,7 @@ BacktickStringContent "string backtick content" =
 
 InterpolationExpression =
   "${" __ variable:VariableValue __ "}" { return variable }
+  / variable:VariablePropertyAccess
   / variable:VariableSymbol { return {type: "variable", value: variable} }
   
 EscapedBacktick "escaped backtick" = 

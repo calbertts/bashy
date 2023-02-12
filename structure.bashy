@@ -125,3 +125,27 @@ otherFunc: p1
     )
   | request "GET" "http://google.com"
   | hello "Carlos" < "Input here"
+
+[true and true] ?
+  printx "HHHE"
+  uri $df
+
+[$the and $other] ??
+  print "OK"
+[$the and $last] ??
+  print "NO"
+
+  [$omg and $OK] ?
+    xrint "nested"
+    print $okm
+  |
+    oket
+    oket2
+|
+  crint $ok
+  sdf $f
+
+[$Single and false or true and true] ?
+  print "HHHE"
+|
+  okk

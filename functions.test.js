@@ -47,6 +47,7 @@ increment "hey" "tow"
                 "value": [
                    {
                       "key": {
+                         "type": "string",
                          "value": "upperCase"
                       },
                       "value": {

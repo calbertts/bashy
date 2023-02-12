@@ -19,3 +19,18 @@ Add support for parallel processing, allowing users to take advantage of multipl
 Add support for user-defined operators and syntax extensions, allowing users to customize the language to better suit their needs.
 
 Add support for more advanced control flow, such as goto statements or coroutines. This would allow users to more easily write complex, non-linear programs.
+
+
+list:
+  - add    OK?
+  - remove OK?
+  - search OK?
+  - concat OK?
+  - insert OK
+  - read   OK
+  - split  
+
+map:
+  - add    OK
+  - modify OK
+  - remove
