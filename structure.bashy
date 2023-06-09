@@ -1,4 +1,31 @@
-execute -$node 'console.log("hola")'
+[true and true] ?
+  printx "HHHEn"
+  uri $df
+
+[$the and $other] ??
+  print "OK"
+
+[$the and $last] ??
+  print "NO"
+
+  [$omg and $OK] ?
+    xrint "nested"
+    print $okm
+  |=
+    oket
+
+    $oket276 = 1
+|=
+  crint $ok
+
+  sdf $f
+
+[$Single and false or true and true] ?
+  print "HHHE"
+|=
+  okk
+
+execute -node 'console.log("hola")'
 execute -bash 'echo $HOME'
 
 fn:
@@ -81,14 +108,14 @@ increment: param1, param2
 
 increment "hey" "tow"
 
-$out1, $out2, $out3, $out4 = 
+$out1, $out2, $out3 = 
   | print "OK"
   | request "GET" "http://google.com"
   | hello "Carlos" < (
       print $input
       > count
     )
-  | count
+    | count
 
 [$array] =
   | print "OK"
@@ -125,27 +152,3 @@ otherFunc: p1
     )
   | request "GET" "http://google.com"
   | hello "Carlos" < "Input here"
-
-[true and true] ?
-  printx "HHHE"
-  uri $df
-
-[$the and $other] ??
-  print "OK"
-[$the and $last] ??
-  print "NO"
-
-  [$omg and $OK] ?
-    xrint "nested"
-    print $okm
-  |
-    oket
-    oket2
-|
-  crint $ok
-  sdf $f
-
-[$Single and false or true and true] ?
-  print "HHHE"
-|
-  okk

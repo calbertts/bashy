@@ -131,10 +131,9 @@ Indentx 'indentx'
         let currentIndentCount = i.toString().replace(/,/g, "").length;
         if (currentIndentCount === prevIndentCount + 2) { 
             // DEBUG //
-            print("=== Indent ===");
+            print("=== Indent === line:"+location().start.line);
             print("    current:"+currentIndentCount); 
             print("    previous:"+prevIndentCount);
-            print("    lineNumber:"+location().start.line); 
             // DEBUG //
             prevIndentCount += 2;
             return "[indentx]";
@@ -146,7 +145,7 @@ Samedent 'samedent'
     = s:("  "+ / "") &{
         let currentIndentCount = s.toString().replace(/,/g, "").length;
         if (currentIndentCount === prevIndentCount) {
-            print("=== Samedent ===");
+            print("=== Samedent === line:"+location().start.line);
             return true;
         }
         return false;
@@ -157,10 +156,9 @@ Dedent 'dedent'
         let currentIndentCount = d.toString().replace(/,/g, "").length;
         if (currentIndentCount < prevIndentCount) {
             // DEBUG //
-            print("=== Dedent ===");
+            print("=== Dedent === line:"+location().start.line);
             print("    current:"+currentIndentCount); 
             print("    previous:"+prevIndentCount);
-            print("    lineNumber:"+location().start.line); 
             // DEBUG //
             prevIndentCount -= 2;
             return "[dedent]";
@@ -169,35 +167,48 @@ Dedent 'dedent'
     }
 
 IfExpression = 
-  __ section:If 
-  __ sections:(L elsif:IfElse {return elsif})* L 
-  __ ifelse:Else? EOS? {
+  __ ifif:If
+  __ elif:(L elif:IfElse {return elif})*
+  __ ifelse:Else? {
     return {
       type: "Conditional",
-      section,
-      sections,
+      ifif,
+      elif,
       ifelse
     }
   }
  
-If = "[" condition:BooleanExpression "]" _ "?" L
-  L? Indentx? s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
-  __ {
-   return {condition, sentences}
- }
-
-IfElse = "[" condition:BooleanExpression "]" _ "??" L
-  L? Indentx? s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
-  __ {
-   return {condition, sentences}
- }
-
-Else = "|" "\n"
-  L? Indentx? s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
-  __ {
+If = "[" condition:BooleanExpression "]" _ "?" _ "{" L
+  L? Indentx s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
+  "}" {
    return {
-     sentences
+   	 condition,
+     sentences: [
+       s0,
+       ...sentences
+     ]
    }
+ }
+
+IfElse = "[" condition:BooleanExpression "]" _ "??" _ "{" L
+  L? Indentx s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
+  "}" {
+   return {
+   	 condition,
+     sentences: [
+       s0,
+       ...sentences
+     ]
+   }
+ }
+
+Else = "else" L
+  L? Indentx s0:Sentence sentences:(L? Samedent sentence:Sentence {return sentence})* Dedent
+  {
+   return [
+     s0,
+     ...sentences
+   ]
  }
 
 BooleanExpression "boolean expression" =
